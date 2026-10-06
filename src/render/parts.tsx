@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
 import { clamp, formatNumber } from '../model/numbers';
 import type { Doc } from '../model/types';
 import { channelVertices } from '../model/waveform';
-import { GROUP_BAR, PAD_LEFT, PIN_STEP, crisp, pinWidth, rowY, type Layout, type Marker, type PinPlace, type Row } from './layout';
+import { GROUP_BAR, PAD_LEFT, PIN_STEP, crisp, pinWidth, rowY, type Layout, type Marker, type PhaseBox, type PinPlace, type Row } from './layout';
 import { fitText } from './text';
 import { channelColor, webFont, type DiagramTheme, type FontResolver } from './theme';
 
@@ -231,39 +231,36 @@ export function GroupBars({ layout, theme }: Base) {
   );
 }
 
-/** The phases of all groups, each a labelled box inside the bar of its group. */
+/** A phase: a labelled box inside the bar of its group. */
+export function PhaseBar({ box, theme, font = webFont, selected = false }: { box: PhaseBox; theme: DiagramTheme; font?: FontResolver; selected?: boolean }) {
+  // pins of comments sit at the right end of the box
+  const room = box.width - box.pins * PIN_STEP - (box.pins > 0 ? 3 : 0);
+  return (
+    <g>
+      <rect
+        x={box.x}
+        y={box.y}
+        width={box.width}
+        height={box.height}
+        rx={4}
+        fill={theme.surface}
+        stroke={selected ? theme.selected : theme.guide}
+        strokeWidth={selected ? 1.5 : 1}
+      />
+      <text x={round(box.x + room / 2)} y={box.y + box.height / 2 + 4} textAnchor="middle" {...font('sans600')} fontSize={11.5} fill={theme.text}>
+        {fitText(box.phase.title, 'sans600', 11.5, room - 10)}
+      </text>
+    </g>
+  );
+}
+
+/** The phases of all groups. */
 export function PhaseBars({ layout, theme, font = webFont, selectedPhaseId }: Base & { selectedPhaseId?: string }) {
   return (
     <g>
-      {layout.phases.map((box) => {
-        const selected = box.phase.id === selectedPhaseId;
-        // pins of comments sit at the right end of the box
-        const room = box.width - box.pins * PIN_STEP - (box.pins > 0 ? 3 : 0);
-        return (
-          <g key={box.phase.id}>
-            <rect
-              x={box.x}
-              y={box.y}
-              width={box.width}
-              height={box.height}
-              rx={4}
-              fill={theme.surface}
-              stroke={selected ? theme.selected : theme.guide}
-              strokeWidth={selected ? 1.5 : 1}
-            />
-            <text
-              x={round(box.x + room / 2)}
-              y={box.y + box.height / 2 + 4}
-              textAnchor="middle"
-              {...font('sans600')}
-              fontSize={11.5}
-              fill={theme.text}
-            >
-              {fitText(box.phase.title, 'sans600', 11.5, room - 10)}
-            </text>
-          </g>
-        );
-      })}
+      {layout.phases.map((box) => (
+        <PhaseBar key={box.phase.id} box={box} theme={theme} font={font} selected={box.phase.id === selectedPhaseId} />
+      ))}
     </g>
   );
 }

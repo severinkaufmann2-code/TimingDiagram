@@ -8,11 +8,12 @@ import { addChannelOfKind } from './actions';
 import { startDrag } from './drag';
 import { TextField } from './fields';
 import { focusGiven, focusWhenShown, isFocusWanted } from './focus';
-import { ChevronDownIcon, ChevronRightIcon, CopyIcon, GripIcon, MoreIcon, RampIcon, RowsIcon, StepIcon, TrashIcon } from './icons';
+import { ChevronDownIcon, ChevronRightIcon, CopyIcon, GripIcon, MoreIcon, PhaseIcon, RampIcon, RowsIcon, StepIcon, TrashIcon } from './icons';
 import { MenuButton, MenuDivider, MenuItem } from './menus';
+import { addPhaseInFirstGap } from './PhaseLayer';
 import { groupDrop } from './reorder';
 
-function GroupMenu({ band, channels, extra }: { band: Band; channels: number; extra?: ReactNode }) {
+function GroupMenu({ band, channels }: { band: Band; channels: number }) {
   const { group } = band;
   const id = group.id;
   const only = useStore((state) => state.doc.groups.length === 1);
@@ -34,7 +35,7 @@ function GroupMenu({ band, channels, extra }: { band: Band; channels: number; ex
     <>
       <MenuItem autoFocus icon={<StepIcon size={16} />} title="Add a digital channel" onSelect={() => addChannelOfKind('digital', id)} />
       <MenuItem icon={<RampIcon size={16} />} title="Add an analog channel" onSelect={() => addChannelOfKind('analog', id)} />
-      {extra}
+      <MenuItem icon={<PhaseIcon />} title="Add a phase" onSelect={() => addPhaseInFirstGap(id)} />
       <MenuDivider />
       <MenuItem
         icon={<CopyIcon />}
@@ -64,11 +65,9 @@ interface GroupHeaderProps {
   channels: number;
   /** Pins of the comments on the group. */
   pins?: ReactNode;
-  /** More entries for the menu of the group. */
-  menuExtra?: ReactNode;
 }
 
-export function GroupHeader({ band, channels, pins, menuExtra }: GroupHeaderProps) {
+export function GroupHeader({ band, channels, pins }: GroupHeaderProps) {
   const { group } = band;
   const id = group.id;
   const rename = useRef(isFocusWanted(id)).current;
@@ -148,7 +147,7 @@ export function GroupHeader({ band, channels, pins, menuExtra }: GroupHeaderProp
         className="icon-button group-menu"
         ariaLabel={`Menu of group ${group.title}`}
         title="Add to the group, duplicate or remove it"
-        menu={() => <GroupMenu band={band} channels={channels} extra={menuExtra} />}
+        menu={() => <GroupMenu band={band} channels={channels} />}
       >
         <MoreIcon />
       </MenuButton>

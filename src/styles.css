@@ -1189,3 +1189,27 @@ kbd {
   gap: 4px;
   margin-left: -6px;
 }
+
+/* ───────────── phases ───────────── */
+
+.phase-lane {
+  cursor: copy;
+}
+.phase {
+  outline: none;
+  cursor: pointer;
+  touch-action: none;
+}
+.phase-edge {
+  cursor: ew-resize;
+}
+.phase:focus-visible .phase-hit {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+.editor-title {
+  width: 124px;
+}
+.editor-edge {
+  width: 62px;
+}

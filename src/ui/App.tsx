@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { clearValue, removePoint } from '../model/doc';
+import { removePhase } from '../model/phases';
 import { INITIAL } from '../model/types';
 import { useStore } from '../state/store';
 import { loadFile, openProject, saveCurrentProject, zoomBy } from './actions';
@@ -51,6 +52,9 @@ function useGlobalKeys() {
         } else if (selection.kind === 'cell' && selection.column !== INITIAL) {
           event.preventDefault();
           state.change((doc) => clearValue(doc, selection.channelId, selection.column));
+        } else if (selection.kind === 'phase') {
+          event.preventDefault();
+          state.change((doc) => removePhase(doc, selection.groupId, selection.phaseId));
         }
       }
     };

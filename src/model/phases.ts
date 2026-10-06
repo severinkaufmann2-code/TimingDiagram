@@ -149,21 +149,46 @@ export function renamePhase(doc: Doc, groupId: string, phaseId: string, title: s
 }
 
 /**
- * Moves the start or the end of a phase to another moment. The other end
- * stays; the moved one stops where a neighbouring phase begins.
+ * The stretch a phase would get in a group when it is drawn from `origin`
+ * towards `target`: it stops where another phase begins. Null when there is
+ * no room. `ignoreId` names a phase that is being changed and so is not in the way.
  */
-export function setPhaseEdge(doc: Doc, groupId: string, phaseId: string, edge: 'start' | 'end', moment: Anchor): Doc {
+export function fitPhase(doc: Doc, groupId: string, origin: Anchor, target: Anchor, ignoreId?: string): { from: Anchor; to: Anchor } | null {
+  const group = findGroup(doc, groupId);
+  return group ? fit(doc, group, origin, target, ignoreId) : null;
+}
+
+/**
+ * Lays a phase out anew: from the moment `origin`, which stays, towards
+ * `target`, as far as the neighbouring phases allow.
+ */
+export function stretchPhase(doc: Doc, groupId: string, phaseId: string, origin: Anchor, target: Anchor): Doc {
   const group = findGroup(doc, groupId);
   const phase = group?.phases.find((candidate) => candidate.id === phaseId);
   if (!group || !phase) return doc;
-  const ends = phaseEnds(doc, phase);
-  const fitted = fit(doc, group, edge === 'start' ? ends.end : ends.start, moment, phaseId);
+  const fitted = fit(doc, group, origin, target, phaseId);
   if (!fitted || (sameAnchor(fitted.from, phase.from) && sameAnchor(fitted.to, phase.to))) return doc;
   const next = mapGroup(doc, groupId, (current) => ({
     ...current,
     phases: current.phases.map((candidate) => (candidate.id === phaseId ? { ...candidate, ...fitted } : candidate)),
   }));
   return coverMoments(next);
+}
+
+/** The moment a phase starts at, and the one it ends at. */
+export function phaseMoments(doc: Doc, phase: Phase): { start: Anchor; end: Anchor } {
+  return phaseEnds(doc, phase);
+}
+
+/**
+ * Moves the start or the end of a phase to another moment. The other end
+ * stays; the moved one stops where a neighbouring phase begins.
+ */
+export function setPhaseEdge(doc: Doc, groupId: string, phaseId: string, edge: 'start' | 'end', moment: Anchor): Doc {
+  const phase = findPhase(doc, groupId, phaseId);
+  if (!phase) return doc;
+  const ends = phaseEnds(doc, phase);
+  return stretchPhase(doc, groupId, phaseId, edge === 'start' ? ends.end : ends.start, moment);
 }
 
 /** Removes a phase, together with the comments on it. */

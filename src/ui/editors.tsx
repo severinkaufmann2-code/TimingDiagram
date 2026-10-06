@@ -2,13 +2,15 @@
 
 import type { ReactNode, RefObject } from 'react';
 import { clearValue, removePoint, setMode, setPointTime, setValue } from '../model/doc';
+import { anchorAt } from '../model/moments';
 import { formatNumber, niceStep } from '../model/numbers';
+import { findPhase, phaseSpan, removePhase, renamePhase, setPhaseEdge } from '../model/phases';
 import { INITIAL, type Mode } from '../model/types';
 import { valueAt } from '../model/waveform';
 import { rowY, valueStep, type Layout } from '../render/layout';
 import { useStore } from '../state/store';
 import { HEADER_WIDTH } from './constants';
-import { NumberField } from './fields';
+import { NumberField, TextField } from './fields';
 import { CloseIcon, RampIcon, StepIcon, TrashIcon } from './icons';
 import { Popover, type AnchorRect } from './Popover';
 
@@ -232,6 +234,96 @@ export function PointEditor({ layout, rulerSvg, stage }: EditorProps & { rulerSv
           className="text-button"
           title="Delete this transition point and the values on it"
           onClick={() => change((d) => removePoint(d, pointId))}
+        >
+          <TrashIcon /> Delete
+        </button>
+      </div>
+    </Popover>
+  );
+}
+
+/** Title, exact start and end, and removal for the selected phase. */
+export function PhaseEditor({ layout, lanesSvg, stage }: EditorProps & { lanesSvg: RefObject<SVGSVGElement | null> }) {
+  const doc = useStore((state) => state.doc);
+  const selection = useStore((state) => state.selection);
+  const panel = useStore((state) => state.panel);
+  const change = useStore((state) => state.change);
+  const closePanel = useStore((state) => state.closePanel);
+
+  if (panel?.type !== 'phase' || selection.kind !== 'phase') return null;
+  const box = layout.phases.find((candidate) => candidate.phase.id === selection.phaseId);
+  if (!box) return null;
+  const { phase, groupId } = box;
+  const span = phaseSpan(doc, phase);
+  const step = doc.time.snap > 0 ? doc.time.snap : niceStep((doc.time.end - doc.time.start) / 100);
+  const notANumber = (text: string) => useStore.getState().notify(`“${text}” is not a number.`, 'error');
+
+  /** Sets one end to an exact time. Says so when a neighbouring phase or the other end is in the way. */
+  const setEdge = (edge: 'start' | 'end', time: number) => {
+    const state = useStore.getState();
+    const next = setPhaseEdge(state.doc, groupId, phase.id, edge, anchorAt(state.doc, time));
+    const moved = findPhase(next, groupId, phase.id);
+    const reached = moved ? phaseSpan(next, moved) : span;
+    state.change(() => next);
+    if (reached.start !== time && reached.end !== time) state.notify('A phase needs a length and cannot reach into another phase.');
+  };
+
+  return (
+    <Popover
+      key={phase.id}
+      anchor={() =>
+        anchorIn(
+          lanesSvg,
+          stage,
+          { x: box.x + box.width / 2, y: box.y + box.height / 2, halfWidth: Math.min(box.width / 2, 40), halfHeight: box.height / 2 },
+          layout.rulerHeight,
+        )
+      }
+      side="bottom"
+      arrow
+      label={`Phase ${phase.title}`}
+      onClose={closePanel}
+    >
+      <div className="editor">
+        <span className="editor-caption">Phase</span>
+        <TextField
+          className="field editor-title"
+          ariaLabel="Title of the phase"
+          value={phase.title}
+          required
+          maxLength={80}
+          autoFocus
+          onCommit={(title) => change((d) => renamePhase(d, groupId, phase.id, title))}
+          onEnter={closePanel}
+        />
+        <span className="editor-divider" aria-hidden="true" />
+        <span className="editor-caption">from</span>
+        <NumberField
+          className="field field-number editor-edge"
+          ariaLabel="Start of the phase"
+          value={span.start}
+          minDecimals={layout.timeDecimals}
+          step={step}
+          onCommit={(time) => setEdge('start', time)}
+          onInvalid={notANumber}
+        />
+        <span className="editor-caption">to</span>
+        <NumberField
+          className="field field-number editor-edge"
+          ariaLabel="End of the phase"
+          value={span.end}
+          minDecimals={layout.timeDecimals}
+          step={step}
+          onCommit={(time) => setEdge('end', time)}
+          onInvalid={notANumber}
+        />
+        {doc.time.unit && <span className="editor-unit">{doc.time.unit}</span>}
+        <span className="editor-divider" aria-hidden="true" />
+        <button
+          type="button"
+          className="text-button"
+          title="Delete this phase and the comments on it"
+          onClick={() => change((d) => removePhase(d, groupId, phase.id))}
         >
           <TrashIcon /> Delete
         </button>

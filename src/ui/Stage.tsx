@@ -7,14 +7,15 @@
 import { Fragment, useLayoutEffect, useMemo, useRef } from 'react';
 import { INITIAL } from '../model/types';
 import { computeLayout } from '../render/layout';
-import { PhaseBars, Pins } from '../render/parts';
+import { Pins } from '../render/parts';
 import { DARK, LIGHT, channelColor } from '../render/theme';
 import { effectiveScale, useStore } from '../state/store';
 import { AddRow, ChannelHeader } from './ChannelHeader';
 import { HEADER_WIDTH } from './constants';
-import { CellEditor, PointEditor } from './editors';
+import { CellEditor, PhaseEditor, PointEditor } from './editors';
 import { GroupHeader } from './GroupHeader';
 import { Lanes } from './Lanes';
+import { PhaseLayer } from './PhaseLayer';
 import { Ruler } from './Ruler';
 
 /** Height of the row under the lanes that holds the buttons for adding a channel or a group. */
@@ -92,9 +93,15 @@ export function Stage() {
             selectedRow={selectedRow}
             svgRef={lanesSvg}
             under={
-              <g pointerEvents="none">
-                <PhaseBars layout={layout} theme={theme} />
-              </g>
+              layout.bands.length > 0 && (
+                <PhaseLayer
+                  doc={doc}
+                  layout={layout}
+                  theme={theme}
+                  selectedPhaseId={selection.kind === 'phase' ? selection.phaseId : undefined}
+                  svgRef={lanesSvg}
+                />
+              )
             }
           >
             <g pointerEvents="none">
@@ -109,6 +116,7 @@ export function Stage() {
 
       <CellEditor layout={layout} lanesSvg={lanesSvg} stage={stage} />
       <PointEditor layout={layout} rulerSvg={rulerSvg} stage={stage} />
+      <PhaseEditor layout={layout} lanesSvg={lanesSvg} stage={stage} />
     </div>
   );
 }

@@ -13,7 +13,18 @@ import {
 } from '../src/model/doc';
 import { addGroup, channelsOf, duplicateGroup, moveGroup, removeGroup, renameGroup } from '../src/model/groups';
 import { anchorAt, anchorTime } from '../src/model/moments';
-import { addPhase, firstGap, gapAround, phaseSpan, removePhase, renamePhase, setPhaseEdge, sortedPhases } from '../src/model/phases';
+import {
+  addPhase,
+  firstGap,
+  fitPhase,
+  gapAround,
+  phaseSpan,
+  removePhase,
+  renamePhase,
+  setPhaseEdge,
+  sortedPhases,
+  stretchPhase,
+} from '../src/model/phases';
 import { sampleDoc, sampleGroupsDoc } from '../src/model/sample';
 import { parseProject, serialize } from '../src/model/serialize';
 import type { Doc } from '../src/model/types';
@@ -189,6 +200,29 @@ describe('phases', () => {
     expect(flipped.groups[0]!.phases[1]).toMatchObject({ from: { point: 'p5' }, to: { time: 7 } });
     // beyond the timeline: the range grows
     expect(setPhaseEdge(b.doc, g, b.id, 'end', { time: 9 }).time.end).toBe(9);
+  });
+
+  it('says how far a phase can be drawn before it is drawn', () => {
+    const { doc, g } = oneGroup();
+    const one = addPhase(doc, g, { point: 'p3' }, { point: 'p5' }, 'Hold');
+    expect(fitPhase(one.doc, g, { point: 'p1' }, { time: 7 })).toEqual({ from: { point: 'p1' }, to: { point: 'p3' } });
+    expect(fitPhase(one.doc, g, { time: 7 }, { point: 'p1' })).toEqual({ from: { point: 'p5' }, to: { time: 7 } });
+    expect(fitPhase(one.doc, g, { time: 3.5 }, { time: 7 })).toBeNull();
+    // the phase that is being changed is not in its own way
+    expect(fitPhase(one.doc, g, { point: 'p3' }, { time: 7 }, one.id)).toEqual({ from: { point: 'p3' }, to: { time: 7 } });
+    expect(fitPhase(one.doc, 'nope', { time: 0 }, { time: 1 })).toBeNull();
+  });
+
+  it('is laid out anew from the end that stays, also through that end', () => {
+    const { doc, g } = oneGroup();
+    const one = addPhase(doc, g, { point: 'p3' }, { point: 'p5' }, 'Hold');
+    const phase = (d: Doc) => d.groups[0]!.phases[0]!;
+    // the start stays, the end goes to 6.5 s
+    expect(phase(stretchPhase(one.doc, g, one.id, { point: 'p3' }, { point: 'p6' }))).toMatchObject({ from: { point: 'p3' }, to: { point: 'p6' } });
+    // the start stays, the pointer went left of it: the phase now lies before 3.0 s
+    expect(phase(stretchPhase(one.doc, g, one.id, { point: 'p3' }, { point: 'p2' }))).toMatchObject({ from: { point: 'p2' }, to: { point: 'p3' } });
+    expect(stretchPhase(one.doc, g, one.id, { point: 'p3' }, { point: 'p3' })).toBe(one.doc);
+    expect(stretchPhase(one.doc, g, one.id, { point: 'p3' }, { point: 'p5' })).toBe(one.doc);
   });
 
   it('is pushed along with the later points, also where it holds on to none', () => {
