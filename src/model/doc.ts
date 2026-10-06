@@ -3,6 +3,10 @@
  * document and return a new one, which is what makes undo trivial.
  */
 
+import { dropOrphanComments } from './comments';
+import { arrangeChannels } from './groups';
+import { newId } from './ids';
+import { freeMomentExtent, mapAnchors } from './moments';
 import { clean } from './numbers';
 import {
   INITIAL,
@@ -20,13 +24,7 @@ import { levelBefore, pointExtent, valueExtent } from './waveform';
 /** Number of channel colours. A channel stores an index into this palette. */
 export const PALETTE_SIZE = 8;
 
-export function newId(prefix: string, taken: Iterable<string> = []): string {
-  const used = new Set(taken);
-  for (;;) {
-    const id = prefix + Math.random().toString(36).slice(2, 8).padEnd(6, '0');
-    if (!used.has(id)) return id;
-  }
-}
+export { newId };
 
 /** The transition a new value gets: digital signals jump, analog signals glide. */
 export function defaultMode(kind: ChannelKind): Mode {
@@ -38,7 +36,9 @@ export function emptyDoc(): Doc {
     title: 'Untitled diagram',
     time: { unit: 's', start: 0, end: 10, snap: 0.1 },
     points: [],
+    groups: [],
     channels: [],
+    comments: [],
   };
 }
 
@@ -106,14 +106,14 @@ export function setTitle(doc: Doc, title: string): Doc {
 
 /**
  * Changes unit, range or snap grid. The range always keeps every transition
- * point visible, and its end stays after its start.
+ * point, phase and comment visible, and its end stays after its start.
  */
 export function setTimeAxis(doc: Doc, patch: Partial<TimeAxis>): Doc {
   const next = { ...doc.time, ...patch };
   let start = Number.isFinite(next.start) ? clean(next.start) : doc.time.start;
   let end = Number.isFinite(next.end) ? clean(next.end) : doc.time.end;
-  const extent = pointExtent(doc.points);
-  if (extent) {
+  for (const extent of [pointExtent(doc.points), freeMomentExtent(doc)]) {
+    if (!extent) continue;
     start = Math.min(start, extent.min);
     end = Math.max(end, extent.max);
   }
@@ -145,14 +145,17 @@ function freeColor(doc: Doc): number {
   return doc.channels.length % PALETTE_SIZE;
 }
 
-export function addChannel(
-  doc: Doc,
-  kind: ChannelKind = 'digital',
-  index: number = doc.channels.length,
-): { doc: Doc; id: string } {
+/**
+ * Adds a channel at the bottom of a group. Without a group it goes to the
+ * last one, or to the bottom of a diagram that has no groups.
+ */
+export function addChannel(doc: Doc, kind: ChannelKind = 'digital', groupId?: string): { doc: Doc; id: string } {
   const id = newId('c', doc.channels.map((channel) => channel.id));
+  const last = doc.groups[doc.groups.length - 1];
+  const group = doc.groups.some((candidate) => candidate.id === groupId) ? groupId! : last ? last.id : null;
   const channel: Channel = {
     id,
+    group,
     name: freeChannelName(doc),
     kind,
     color: freeColor(doc),
@@ -162,17 +165,19 @@ export function addChannel(
     initial: 0,
     cells: {},
   };
-  const channels = [...doc.channels];
-  channels.splice(Math.max(0, Math.min(index, channels.length)), 0, channel);
-  return { doc: { ...doc, channels }, id };
+  return { doc: arrangeChannels({ ...doc, channels: [...doc.channels, channel] }), id };
 }
 
+/** Removes a channel, together with the comments on it. */
 export function removeChannel(doc: Doc, channelId: string): Doc {
   const channels = doc.channels.filter((channel) => channel.id !== channelId);
-  return channels.length === doc.channels.length ? doc : { ...doc, channels };
+  return channels.length === doc.channels.length ? doc : dropOrphanComments({ ...doc, channels });
 }
 
-/** Moves a channel so that it ends up at `toIndex` in the list. */
+/**
+ * Moves a channel so that it ends up at `toIndex` in the list. In a diagram
+ * with groups it joins the group of the channel that was at that place.
+ */
 export function moveChannel(doc: Doc, channelId: string, toIndex: number): Doc {
   const from = doc.channels.findIndex((channel) => channel.id === channelId);
   if (from < 0) return doc;
@@ -180,8 +185,54 @@ export function moveChannel(doc: Doc, channelId: string, toIndex: number): Doc {
   if (to === from) return doc;
   const channels = [...doc.channels];
   const [moved] = channels.splice(from, 1);
-  channels.splice(to, 0, moved!);
-  return { ...doc, channels };
+  channels.splice(to, 0, { ...moved!, group: doc.channels[to]!.group });
+  return arrangeChannels({ ...doc, channels });
+}
+
+/**
+ * Puts a channel at a place inside a group: `index` 0 is the top of the
+ * group. With null as the group, the place counts in a diagram without groups.
+ */
+export function placeChannel(doc: Doc, channelId: string, groupId: string | null, index: number): Doc {
+  const moved = findChannel(doc, channelId);
+  const group = doc.groups.length === 0 ? null : groupId;
+  if (!moved || (doc.groups.length > 0 && !doc.groups.some((candidate) => candidate.id === group))) return doc;
+  const others = doc.channels.filter((channel) => channel.id !== channelId);
+  const siblings = others.filter((channel) => channel.group === group);
+  const at = Math.max(0, Math.min(Math.round(index), siblings.length));
+  // right before the sibling that is at that place now, or at the end of the list; arranging sorts out the groups
+  const before = siblings[at];
+  const position = before ? others.indexOf(before) : others.length;
+  const channels = [...others];
+  channels.splice(position, 0, moved.group === group ? moved : { ...moved, group });
+  const next = arrangeChannels({ ...doc, channels });
+  return next.channels.every((channel, i) => channel === doc.channels[i]) ? doc : next;
+}
+
+/** Puts a channel right above or right below another one, in that channel's group. */
+export function placeChannelBeside(doc: Doc, channelId: string, otherId: string, below: boolean): Doc {
+  const other = findChannel(doc, otherId);
+  if (!other || channelId === otherId) return doc;
+  const siblings = doc.channels.filter((channel) => channel.group === other.group && channel.id !== channelId);
+  return placeChannel(doc, channelId, other.group, siblings.indexOf(other) + (below ? 1 : 0));
+}
+
+/**
+ * Moves a channel one place up or down. At the edge of its group it goes
+ * over to the neighbouring group.
+ */
+export function moveChannelBy(doc: Doc, channelId: string, step: -1 | 1): Doc {
+  const channel = findChannel(doc, channelId);
+  if (!channel) return doc;
+  const siblings = doc.channels.filter((candidate) => candidate.group === channel.group);
+  const index = siblings.indexOf(channel);
+  const target = index + step;
+  if (target >= 0 && target < siblings.length) return placeChannel(doc, channelId, channel.group, target);
+  const groupAt = doc.groups.findIndex((group) => group.id === channel.group);
+  const neighbour = doc.groups[groupAt + step];
+  if (groupAt < 0 || !neighbour) return doc;
+  const size = doc.channels.filter((candidate) => candidate.group === neighbour.id).length;
+  return placeChannel(doc, channelId, neighbour.id, step < 0 ? size : 0);
 }
 
 export type ChannelPatch = Partial<Pick<Channel, 'name' | 'color' | 'unit' | 'min' | 'max'>>;
@@ -246,15 +297,21 @@ export function addPoint(doc: Doc, time: number): { doc: Doc; id: string } {
   };
 }
 
+/**
+ * Removes a point together with the values on it. Phases and comments that
+ * held on to the point stay at the time it had.
+ */
 export function removePoint(doc: Doc, pointId: string): Doc {
-  if (pointIndex(doc, pointId) < 0) return doc;
+  const removed = doc.points.find((point) => point.id === pointId);
+  if (!removed) return doc;
+  const released = mapAnchors(doc, (anchor) => ('point' in anchor && anchor.point === pointId ? { time: removed.time } : anchor));
   const channels = doc.channels.map((channel) => {
     if (!(pointId in channel.cells)) return channel;
     const cells = { ...channel.cells };
     delete cells[pointId];
     return { ...channel, cells };
   });
-  return { ...doc, points: doc.points.filter((point) => point.id !== pointId), channels };
+  return { ...released, points: doc.points.filter((point) => point.id !== pointId), channels };
 }
 
 export function setPointTime(doc: Doc, pointId: string, time: number): Doc {
@@ -268,17 +325,22 @@ export function setPointTime(doc: Doc, pointId: string, time: number): Doc {
 
 /**
  * Moves a point and every later one by the same amount, so the intervals
- * after it keep their length.
+ * after it keep their length. Ends of phases and pins of comments that sit
+ * at a plain time from this point on move along.
  */
 export function shiftPointsFrom(doc: Doc, pointId: string, delta: number): Doc {
   const from = pointIndex(doc, pointId);
   if (from < 0 || !Number.isFinite(delta) || delta === 0) return doc;
+  const fromTime = doc.points[from]!.time;
   const points = sortPoints(
     doc.points.map((point, index) => (index >= from ? { ...point, time: clean(point.time + delta) } : point)),
   );
+  const pushed = mapAnchors(doc, (anchor) => ('time' in anchor && anchor.time >= fromTime ? { time: clean(anchor.time + delta) } : anchor));
   let time = doc.time;
   for (const point of points) time = includeTime(time, point.time);
-  return { ...doc, points, time };
+  const extent = freeMomentExtent(pushed);
+  if (extent) time = includeTime(includeTime(time, extent.min), extent.max);
+  return { ...pushed, points, time };
 }
 
 // ───────────────────────────── values ─────────────────────────────

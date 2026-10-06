@@ -1,12 +1,18 @@
 /** Saving and loading project files. */
 
-import { PALETTE_SIZE, newId, normalizeChannel } from './doc';
+import { COMMENT_MAX_LENGTH, dropOrphanComments } from './comments';
+import { PALETTE_SIZE, normalizeChannel } from './doc';
+import { GROUP_TITLE_MAX_LENGTH, arrangeChannels } from './groups';
+import { newId } from './ids';
+import { coverMoments } from './moments';
 import { clean } from './numbers';
-import type { Cell, Channel, Doc, Point, TimeAxis } from './types';
+import { PHASE_TITLE_MAX_LENGTH } from './phases';
+import type { Anchor, Cell, Channel, Comment, CommentTarget, Doc, Group, Phase, Point, TimeAxis } from './types';
 import { pointExtent } from './waveform';
 
 export const FILE_KIND = 'timing-diagram';
-export const FILE_VERSION = 1;
+/** The newest format this editor writes and reads. Version 2 added groups, phases and comments. */
+export const FILE_VERSION = 2;
 export const FILE_EXTENSION = '.timing.json';
 
 /** Id of the script element that carries the project inside an exported HTML page. */
@@ -14,8 +20,17 @@ export const EMBED_ID = 'timing-diagram-project';
 
 export class ProjectFileError extends Error {}
 
+/**
+ * The format version a diagram needs. One without groups and comments is
+ * written as version 1, so that version 1.0 of the editor still opens it;
+ * the others it refuses instead of silently dropping what it does not know.
+ */
+export function fileVersion(doc: Doc): number {
+  return doc.groups.length > 0 || doc.comments.length > 0 ? FILE_VERSION : 1;
+}
+
 export function serialize(doc: Doc): string {
-  return JSON.stringify({ kind: FILE_KIND, version: FILE_VERSION, ...doc }, null, 2) + '\n';
+  return JSON.stringify({ kind: FILE_KIND, version: fileVersion(doc), ...doc }, null, 2) + '\n';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -69,6 +84,7 @@ function readChannels(value: unknown, pointIds: ReadonlySet<string>): Channel[] 
     channels.push(
       normalizeChannel({
         id,
+        group: typeof item.group === 'string' ? item.group : null,
         name: text(item.name, `Channel ${channels.length + 1}`),
         kind,
         color: ((Math.round(color) % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE,
@@ -81,6 +97,83 @@ function readChannels(value: unknown, pointIds: ReadonlySet<string>): Channel[] 
     );
   }
   return channels;
+}
+
+function readAnchor(value: unknown, pointIds: ReadonlySet<string>): Anchor | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.point === 'string') return pointIds.has(value.point) ? { point: value.point } : null;
+  if (typeof value.time === 'number' && Number.isFinite(value.time)) return { time: clean(value.time) };
+  return null;
+}
+
+function readPhases(value: unknown, pointIds: ReadonlySet<string>, taken: Set<string>): Phase[] {
+  if (!Array.isArray(value)) return [];
+  const phases: Phase[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+    const from = readAnchor(item.from, pointIds);
+    const to = readAnchor(item.to, pointIds);
+    if (!from || !to) continue;
+    let id = typeof item.id === 'string' && item.id !== '' ? item.id : newId('h', taken);
+    if (taken.has(id)) id = newId('h', taken);
+    taken.add(id);
+    phases.push({ id, title: text(item.title, `Phase ${phases.length + 1}`, PHASE_TITLE_MAX_LENGTH), from, to });
+  }
+  return phases;
+}
+
+function readGroups(value: unknown, pointIds: ReadonlySet<string>): Group[] {
+  if (!Array.isArray(value)) return [];
+  const taken = new Set<string>();
+  const phaseIds = new Set<string>();
+  const groups: Group[] = [];
+  for (const item of value) {
+    if (!isRecord(item)) continue;
+    let id = typeof item.id === 'string' && item.id !== '' ? item.id : newId('g', taken);
+    if (taken.has(id)) id = newId('g', taken);
+    taken.add(id);
+    groups.push({
+      id,
+      title: text(item.title, `Group ${groups.length + 1}`, GROUP_TITLE_MAX_LENGTH),
+      phases: readPhases(item.phases, pointIds, phaseIds),
+    });
+  }
+  return groups;
+}
+
+function readTarget(value: unknown, pointIds: ReadonlySet<string>): CommentTarget | null {
+  if (!isRecord(value)) return null;
+  // a moment that cannot be read makes the comment one about the whole diagram or channel
+  const at = readAnchor(value.at, pointIds) ?? undefined;
+  switch (value.kind) {
+    case 'diagram':
+      return at ? { kind: 'diagram', at } : { kind: 'diagram' };
+    case 'group':
+      return typeof value.group === 'string' ? { kind: 'group', group: value.group } : null;
+    case 'phase':
+      return typeof value.phase === 'string' ? { kind: 'phase', phase: value.phase } : null;
+    case 'channel':
+      if (typeof value.channel !== 'string') return null;
+      return at ? { kind: 'channel', channel: value.channel, at } : { kind: 'channel', channel: value.channel };
+    default:
+      return null;
+  }
+}
+
+function readComments(value: unknown, pointIds: ReadonlySet<string>): Comment[] {
+  if (!Array.isArray(value)) return [];
+  const taken = new Set<string>();
+  const comments: Comment[] = [];
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.text !== 'string' || item.text.trim() === '') continue;
+    const on = readTarget(item.on, pointIds);
+    if (!on) continue;
+    let id = typeof item.id === 'string' && item.id !== '' ? item.id : newId('n', taken);
+    if (taken.has(id)) id = newId('n', taken);
+    taken.add(id);
+    comments.push({ id, text: item.text.slice(0, COMMENT_MAX_LENGTH), on });
+  }
+  return comments;
 }
 
 function readTime(value: unknown, points: readonly Point[]): TimeAxis {
@@ -130,17 +223,21 @@ export function parseProject(content: string): Doc {
 
   const points = readPoints(data.points);
   const pointIds = new Set(points.map((point) => point.id));
-  return {
+  const doc: Doc = {
     title: text(data.title, 'Untitled diagram'),
     time: readTime(data.time, points),
     points,
+    groups: readGroups(data.groups, pointIds),
     channels: readChannels(data.channels, pointIds),
+    comments: readComments(data.comments, pointIds),
   };
+  // a file of version 1 has neither groups nor comments and passes through unchanged
+  return coverMoments(dropOrphanComments(arrangeChannels(doc)));
 }
 
 /** JSON that is safe to place inside a script element of an HTML page. */
 export function serializeForHtml(doc: Doc): string {
-  return JSON.stringify({ kind: FILE_KIND, version: FILE_VERSION, ...doc }).replace(/</g, '\\u003c');
+  return JSON.stringify({ kind: FILE_KIND, version: fileVersion(doc), ...doc }).replace(/</g, '\\u003c');
 }
 
 /** A file name made from the diagram title. */
