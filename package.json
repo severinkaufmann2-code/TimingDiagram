@@ -1,0 +1,38 @@
+{
+  "name": "timing-diagram",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Timing diagram editor for the browser: stacked channels on one timeline, exact transition points, step and ramp values, export to Excel, PDF and HTML",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "fonts": "node scripts/build-fonts.mjs"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "jspdf": "^4.2.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "svg2pdf.js": "^2.8.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@ibm/plex-mono": "^2.5.0",
+    "@ibm/plex-sans": "^1.1.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "^20.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "subset-font": "^2.9.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^4.1.11"
+  }
+}
