@@ -1,6 +1,7 @@
 /**
- * The diagram as a PDF. The drawing stays vector and the text stays text, set
- * in the bundled fonts. Long diagrams continue on further pages.
+ * The diagram as a PDF: the picture, then the values table. The drawing stays
+ * vector and the text stays text, set in the bundled fonts. What does not fit
+ * on a page continues on the next.
  */
 
 import mono400 from '../assets/fonts/plex-mono-400.ttf?inline';
@@ -12,8 +13,9 @@ import { layoutRows } from '../render/layout';
 import type { FontFace, FontResolver } from '../render/theme';
 import type { PdfPage } from '../state/store';
 import { embeddedFontCss, isCovered } from './fonts';
-import { pictureText, renderPicture, type Picture } from './picture';
+import { PICTURE_MARGIN, pictureText, renderPicture, type Drawing, type Picture } from './picture';
 import { blobToBase64, pictureToPng } from './png';
+import { renderValueTables } from './tablePicture';
 
 /** jsPDF finds a font by family name and style only, so every face gets a family name of its own. */
 const PDF_FONTS: Record<FontFace, { family: string; file: string; data: string }> = {
@@ -46,6 +48,10 @@ function loadMeasurementFonts(): Promise<unknown> {
 const PT = 0.75;
 const PAGE_MARGIN = 36;
 const FOOTER = 16;
+/** Space between the diagram and the values table, the table's heading, and between table blocks. */
+const TABLE_GAP = 26;
+const TABLE_HEADING = 18;
+const TABLE_BLOCK_GAP = 14;
 const PAPER = {
   a4: { width: 841.89, height: 595.28 },
   a3: { width: 1190.55, height: 841.89 },
@@ -78,23 +84,36 @@ export function paginate(doc: Doc, fixedHeight: number, pageHeight: number): Cha
   return pages;
 }
 
+interface Placed {
+  drawing: Drawing;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface PdfPageContent {
+  drawings: Placed[];
+  /** Heading above the values table, when it starts on this page. */
+  heading?: { x: number; y: number };
+}
+
 export async function buildPdf(doc: Doc, options: PdfOptions): Promise<Blob> {
   const [{ jsPDF }] = await Promise.all([import('jspdf'), import('svg2pdf.js')]);
 
-  // text the bundled font cannot draw would come out as gaps, so such a diagram goes in as an image
+  // text the bundled font cannot draw would come out as gaps, so such a diagram goes in as images
   const asImage = !isCovered(pictureText(doc));
+  const fonts = asImage ? { css: embeddedFontCss() } : { font: pdfFont };
+  const whole = renderPicture(doc, { scale: options.scale, ...fonts });
+  // every page of a long diagram gets the same column widths as the whole
   const render = (channels: Channel[]): Picture =>
-    renderPicture(
-      { ...doc, channels },
-      asImage ? { scale: options.scale, css: embeddedFontCss() } : { scale: options.scale, font: pdfFont },
-    );
-
-  const whole = render(doc.channels);
+    renderPicture({ ...doc, channels }, { scale: options.scale, labelWidth: whole.labelWidth, ...fonts });
   let pdf: InstanceType<typeof jsPDF>;
-  let pages: { picture: Picture; x: number; y: number; width: number; height: number }[];
   let pageSize: { width: number; height: number };
+  const pages: PdfPageContent[] = [];
 
   if (options.page === 'fit') {
+    // just the picture, on a page of its own size: made for placing into other documents
     pageSize = { width: whole.width * PT, height: whole.height * PT };
     pdf = new jsPDF({
       orientation: pageSize.width >= pageSize.height ? 'landscape' : 'portrait',
@@ -102,27 +121,58 @@ export async function buildPdf(doc: Doc, options: PdfOptions): Promise<Blob> {
       format: [pageSize.width, pageSize.height],
       compress: true,
     });
-    pages = [{ picture: whole, x: 0, y: 0, ...pageSize }];
+    pages.push({ drawings: [{ drawing: whole, x: 0, y: 0, ...pageSize }] });
   } else {
     pageSize = PAPER[options.page];
     pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: options.page, compress: true });
     const availableWidth = pageSize.width - 2 * PAGE_MARGIN;
-    const availableHeight = pageSize.height - 2 * PAGE_MARGIN - FOOTER;
-    // never enlarge: a short diagram keeps its natural size
+    const bottom = pageSize.height - PAGE_MARGIN - FOOTER;
+    const availableHeight = bottom - PAGE_MARGIN;
+
+    // the diagram: never enlarged, shrunk to the page width, continued on further pages lane by lane
     const zoom = Math.min(1, availableWidth / (whole.width * PT));
     const lanesHeight = layoutRows(doc).reduce((sum, row) => sum + row.height, 0);
     const groups = paginate(doc, whole.height - lanesHeight, availableHeight / (PT * zoom));
-    pages = groups.map((channels) => {
+    for (const channels of groups) {
       const picture = groups.length === 1 ? whole : render(channels);
-      const width = picture.width * PT * zoom;
-      return {
-        picture,
-        x: (pageSize.width - width) / 2,
-        y: PAGE_MARGIN,
-        width,
-        height: picture.height * PT * zoom,
-      };
+      pages.push({
+        drawings: [
+          {
+            drawing: picture,
+            x: PAGE_MARGIN,
+            y: PAGE_MARGIN,
+            width: picture.width * PT * zoom,
+            height: picture.height * PT * zoom,
+          },
+        ],
+      });
+    }
+
+    // the values table: under the diagram when there is room, otherwise on the next page
+    const tables = renderValueTables(doc, {
+      maxWidth: (availableWidth - 2 * PICTURE_MARGIN * PT * zoom) / PT,
+      maxHeight: (availableHeight - TABLE_HEADING) / PT,
+      ...fonts,
     });
+    let page = pages[pages.length - 1]!;
+    const last = page.drawings[page.drawings.length - 1]!;
+    let y = last.y + last.height + TABLE_GAP;
+    const newPage = () => {
+      page = { drawings: [] };
+      pages.push(page);
+      y = PAGE_MARGIN;
+    };
+    if (y + TABLE_HEADING + tables[0]!.height * PT > bottom) newPage();
+    // in line with the frame of the diagram, which sits inside the picture's own margin
+    const tableLeft = PAGE_MARGIN + PICTURE_MARGIN * PT * zoom;
+    page.heading = { x: tableLeft, y: y + 9 };
+    y += TABLE_HEADING;
+    for (const table of tables) {
+      const height = table.height * PT;
+      if (y + height > bottom && page.drawings.length > 0) newPage();
+      page.drawings.push({ drawing: table, x: tableLeft, y, width: table.width * PT, height });
+      y += height + TABLE_BLOCK_GAP;
+    }
   }
 
   for (const font of Object.values(PDF_FONTS)) {
@@ -133,19 +183,27 @@ export async function buildPdf(doc: Doc, options: PdfOptions): Promise<Blob> {
 
   if (!asImage) await loadMeasurementFonts();
 
-  // svg2pdf measures the picture in the page, so it has to be attached for a moment
+  // svg2pdf measures the drawing in the page, so it has to be attached for a moment
   const host = document.createElement('div');
   host.style.cssText = 'position:fixed;left:-100000px;top:0;width:0;height:0;overflow:hidden;pointer-events:none';
   document.body.appendChild(host);
   try {
     for (const [index, page] of pages.entries()) {
       if (index > 0) pdf.addPage();
-      if (asImage) {
-        const png = await blobToBase64(await pictureToPng(page.picture, 3));
-        pdf.addImage(`data:image/png;base64,${png}`, 'PNG', page.x, page.y, page.width, page.height, undefined, 'FAST');
-      } else {
-        host.innerHTML = page.picture.svg;
-        await pdf.svg(host.firstElementChild!, { x: page.x, y: page.y, width: page.width, height: page.height });
+      if (page.heading) {
+        pdf.setFont(PDF_FONTS.sans600.family, 'normal');
+        pdf.setFontSize(10);
+        pdf.setTextColor(20, 24, 31);
+        pdf.text('Values', page.heading.x, page.heading.y);
+      }
+      for (const placed of page.drawings) {
+        if (asImage) {
+          const png = await blobToBase64(await pictureToPng(placed.drawing, 3));
+          pdf.addImage(`data:image/png;base64,${png}`, 'PNG', placed.x, placed.y, placed.width, placed.height, undefined, 'FAST');
+        } else {
+          host.innerHTML = placed.drawing.svg;
+          await pdf.svg(host.firstElementChild!, { x: placed.x, y: placed.y, width: placed.width, height: placed.height });
+        }
       }
       if (pages.length > 1) {
         pdf.setFont(PDF_FONTS.sans400.family, 'normal');

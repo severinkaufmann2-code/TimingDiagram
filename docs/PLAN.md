@@ -1,6 +1,6 @@
 # Timing Diagram Editor – Plan
 
-Status: **approved on 2026-10-06**, implementation in progress.
+Status: **approved on 2026-10-06 and built.** Section 8 lists where the result differs from this plan.
 Original requirements: [`Ideas.txt`](../Ideas.txt).
 Mockup: [`mockup/index.html`](mockup/index.html) (open it in a browser), shown below.
 
@@ -52,22 +52,24 @@ written locally.
 - **A channel does not need a value at every point.** An empty crossing means
   "no change here". A point used by only one channel is perfectly fine.
 - **Every channel has an initial value** at the start of the timeline.
-- **A value describes how the channel arrives at it**: Step or Ramp, measured
-  from the previous point on the timeline.
+- **A value describes how the channel arrives at it**: Step (keep the previous
+  value, then jump) or Ramp (straight line from the channel's previous value).
+  Making a value a ramp also fixes the channel's level at the point before, so
+  the ramp runs "from the previous point to this one" (see section 8).
 - **Digital and analog are a convenience, not a restriction.** A digital channel
   snaps to 0/1 and defaults to Step; an analog channel takes any number, has a
   unit and a range, and defaults to Ramp. A cylinder that travels between two
   end positions is simply a channel with ramps.
 
-Example (the one shown in the mockup):
+Example (the diagram the editor starts with):
 
 | Channel | Initial | 0.5 s | 1.0 s | 3.0 s | 4.0 s | 5.0 s | 6.5 s |
 |---|---|---|---|---|---|---|---|
 | Start button | 0 | step 1 | step 0 | | | | |
 | Valve Y1 | 0 | | step 1 | | | step 0 | |
-| Cylinder A (mm) | 0 | | | ramp 100 | | | ramp 0 |
+| Cylinder A (mm) | 0 | | step 0 | ramp 100 | | step 100 | ramp 0 |
 | Sensor B1 | 0 | | | step 1 | | step 0 | |
-| Pressure (bar) | 0 | | | | ramp 6 | step 0 | |
+| Pressure (bar) | 0 | | | step 0 | ramp 6 | step 0 | |
 
 ## 5. Technology
 
@@ -101,3 +103,29 @@ Possible later, deliberately left out now to keep the tool small:
 text / bus values (e.g. `0x3F`, `IDLE`), cause-and-effect arrows between
 transitions, measurement cursors (Δt), import from Excel / CSV, a packaged
 desktop program.
+
+## 8. What changed while building
+
+The mockup stays as it was drawn; these are the places where the finished
+editor deliberately differs from it or from the plan above.
+
+- **A ramp starts at a value, not at whatever point happens to come before.**
+  The first design measured a ramp from the previous point on the timeline.
+  That made channels depend on points they do not use: a point added for one
+  channel in the middle of another channel's ramp would have shortened that
+  ramp. Now a ramp runs from the channel's own previous value. To keep the
+  behaviour asked for in requirement 8, making a value a ramp places a value at
+  the point before it (the level the channel has there). That value shows as a
+  dot at the foot of the ramp and as a "step" entry in the table; removing it
+  lets a ramp span several points.
+- **"Add channel" asks for the type** (digital or analog) instead of creating a
+  digital channel that then has to be converted.
+- **New / Open / Save are three buttons** in the toolbar; on narrow windows
+  they show icons only. "Unit" and "Snap" share one "Timeline" panel, which
+  also holds the range.
+- **The PDF contains the values table** as well as the picture, and the
+  **HTML page shows time and values under the pointer** and can be opened in
+  the editor again.
+- **Zoom is anchored** at the pointer (Ctrl + wheel), and labels of points
+  that lie close together stack in up to three rows instead of covering each
+  other.

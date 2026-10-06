@@ -66,7 +66,7 @@ function useWheelZoom() {
       if (!(event.ctrlKey || event.metaKey)) return;
       if (!(event.target instanceof Element) || !event.target.closest('.stage')) return;
       event.preventDefault();
-      zoomBy(event.deltaY < 0 ? 1 : -1);
+      zoomBy(event.deltaY < 0 ? 1 : -1, event.clientX);
     };
     window.addEventListener('wheel', onWheel, { passive: false });
     return () => window.removeEventListener('wheel', onWheel);
@@ -106,7 +106,7 @@ function Notice() {
   }, [notice]);
 
   if (!notice) return null;
-  const offersUndo = notice.kind === 'info' && canUndo && /undo/i.test(notice.text);
+  const offersUndo = notice.undo && canUndo;
   return (
     <div className="notice" data-kind={notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}>
       <span>{notice.text}</span>

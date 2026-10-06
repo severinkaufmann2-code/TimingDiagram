@@ -120,7 +120,7 @@ export function ChannelHeader({ row, layout, color, selected }: ChannelHeaderPro
   const remove = () => {
     const { change, notify } = useStore.getState();
     change((doc) => removeChannel(doc, id));
-    notify(`“${channel.name}” removed. Undo brings it back.`);
+    notify(`“${channel.name}” removed.`, 'info', true);
   };
 
   return (

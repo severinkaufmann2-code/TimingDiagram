@@ -5,8 +5,9 @@ import { embeddedFontCss, isCovered } from '../src/export/fonts';
 import { buildHtml } from '../src/export/html';
 import { paginate } from '../src/export/pdf';
 import { pictureScale, renderPicture } from '../src/export/picture';
+import { renderValueTables } from '../src/export/tablePicture';
 import { buildWorkbook } from '../src/export/xlsx';
-import { addChannel, emptyDoc, updateChannel } from '../src/model/doc';
+import { addChannel, addPoint, emptyDoc, updateChannel } from '../src/model/doc';
 import { sampleDoc } from '../src/model/sample';
 import { EMBED_ID, fileBaseName, parseProject, serialize } from '../src/model/serialize';
 import { valueBefore } from '../src/model/waveform';
@@ -190,5 +191,34 @@ describe('PDF pages', () => {
     expect(paginate(doc, 100, 420).map((page) => page.length)).toEqual([4, 4, 2]);
     expect(paginate(doc, 100, 50).map((page) => page.length)).toEqual(Array(10).fill(1));
     expect(paginate(emptyDoc(), 100, 400)).toEqual([[]]);
+  });
+});
+
+describe('values table for the PDF', () => {
+  it('is one block when everything fits', () => {
+    const tables = renderValueTables(sampleDoc(), { maxWidth: 1000, maxHeight: 600 });
+    expect(tables).toHaveLength(1);
+    expect(tables[0]!.svg).toContain('>Cylinder A [mm]<');
+    expect(tables[0]!.svg).toContain('>ramp<');
+    expect(tables[0]!.height).toBe(30 + 5 * 26 + 1);
+  });
+
+  it('is cut into blocks that fit the page, each within the limits', () => {
+    let doc = emptyDoc();
+    for (let i = 0; i < 12; i++) doc = addChannel(doc).doc;
+    for (let i = 1; i <= 25; i++) doc = addPoint(doc, i * 0.25).doc;
+    const tables = renderValueTables(doc, { maxWidth: 700, maxHeight: 250 });
+    // 8 channels and 6 points per block
+    expect(tables).toHaveLength(2 * 5);
+    for (const table of tables) {
+      expect(table.width).toBeLessThanOrEqual(700);
+      expect(table.height).toBeLessThanOrEqual(250);
+    }
+  });
+
+  it('still shows the initial values when there are no points', () => {
+    const tables = renderValueTables(addChannel(emptyDoc()).doc, { maxWidth: 800, maxHeight: 400 });
+    expect(tables).toHaveLength(1);
+    expect(tables[0]!.svg).toContain('>Initial<');
   });
 });

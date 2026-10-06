@@ -44,8 +44,8 @@ interface State {
   tableOpen: boolean;
   theme: ThemeName;
   pdfPage: PdfPage;
-  /** A short notice shown at the bottom of the window. */
-  notice: { text: string; kind: 'info' | 'error'; id: number } | null;
+  /** A short notice shown at the bottom of the window. `undo` offers to take the reported action back. */
+  notice: { text: string; kind: 'info' | 'error'; undo: boolean; id: number } | null;
 }
 
 interface Actions {
@@ -65,7 +65,7 @@ interface Actions {
   setTableOpen(open: boolean): void;
   setTheme(theme: ThemeName): void;
   setPdfPage(page: PdfPage): void;
-  notify(text: string, kind?: 'info' | 'error'): void;
+  notify(text: string, kind?: 'info' | 'error', undo?: boolean): void;
   dismissNotice(): void;
 }
 
@@ -226,8 +226,8 @@ export const useStore = create<State & Actions>()((set, get) => ({
     set({ pdfPage });
   },
 
-  notify(text, kind = 'info') {
-    set({ notice: { text, kind, id: ++noticeId } });
+  notify(text, kind = 'info', undo = false) {
+    set({ notice: { text, kind, undo, id: ++noticeId } });
   },
 
   dismissNotice() {
@@ -247,6 +247,8 @@ export function startPersistence(): void {
   let savedUi = '';
 
   const save = () => {
+    clearTimeout(timer);
+    timer = undefined;
     const state = useStore.getState();
     try {
       if (state.doc !== savedDoc) {
@@ -267,5 +269,8 @@ export function startPersistence(): void {
     clearTimeout(timer);
     timer = setTimeout(save, 300);
   });
-  window.addEventListener('pagehide', save);
+  // a change made just before the tab is hidden or closed must not wait for the timer
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && timer !== undefined) save();
+  });
 }

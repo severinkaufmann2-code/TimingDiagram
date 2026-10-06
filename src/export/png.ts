@@ -1,12 +1,12 @@
 /** Turns an SVG picture into a PNG, using the browser's own renderer. */
 
-import type { Picture } from './picture';
+import type { Drawing } from './picture';
 
 /** Browsers refuse canvases beyond roughly this many pixels per side. */
 const MAX_SIDE = 16000;
 const MAX_AREA = 100_000_000;
 
-export async function pictureToPng(picture: Picture, pixelRatio = 2): Promise<Blob> {
+export async function pictureToPng(picture: Drawing, pixelRatio = 2): Promise<Blob> {
   const ratio = Math.min(
     pixelRatio,
     MAX_SIDE / picture.width,

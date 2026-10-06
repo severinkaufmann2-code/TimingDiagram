@@ -19,12 +19,20 @@ export interface PictureOptions {
   /** CSS placed inside the picture, e.g. embedded fonts. */
   css?: string;
   font?: FontResolver;
+  /** Width of the column with the channel names. Without it, the longest name decides. */
+  labelWidth?: number;
 }
 
-export interface Picture {
+/** An SVG drawing and its size in pixels. */
+export interface Drawing {
   svg: string;
   width: number;
   height: number;
+}
+
+export interface Picture extends Drawing {
+  /** Width of the column with the channel names. */
+  labelWidth: number;
   /** Where the timeline sits inside the picture. */
   plot: {
     /** x of the start of the timeline. */
@@ -41,7 +49,9 @@ export interface Picture {
 const DEFAULT_PLOT_WIDTH = 1100;
 const MIN_WIDTH = 480;
 const MAX_WIDTH = 16000;
-const MARGIN = 16;
+/** Empty space around the drawing. */
+export const PICTURE_MARGIN = 16;
+const MARGIN = PICTURE_MARGIN;
 const TITLE_HEIGHT = 34;
 
 /** The scale a picture is drawn with: the wished one, kept within sane sizes. */
@@ -69,6 +79,7 @@ function PictureSvg({
   font,
   showTitle,
   css,
+  labels,
 }: {
   doc: Doc;
   layout: Layout;
@@ -76,8 +87,8 @@ function PictureSvg({
   font: FontResolver;
   showTitle: boolean;
   css?: string;
+  labels: number;
 }) {
-  const labels = labelColumnWidth(doc);
   const top = MARGIN + (showTitle ? TITLE_HEIGHT : 0);
   const lanesTop = top + layout.rulerHeight;
   const plotLeft = MARGIN + labels;
@@ -175,7 +186,7 @@ export function renderPicture(doc: Doc, options: PictureOptions = {}): Picture {
   const theme = options.theme ?? LIGHT;
   const layout = computeLayout(doc, pictureScale(doc, options.scale));
   const showTitle = (options.showTitle ?? true) && doc.title.trim() !== '';
-  const labels = labelColumnWidth(doc);
+  const labels = options.labelWidth ?? labelColumnWidth(doc);
   const width = MARGIN + labels + layout.width + MARGIN;
   const lanesTop = MARGIN + (showTitle ? TITLE_HEIGHT : 0) + layout.rulerHeight;
   const height = lanesTop + layout.lanesHeight + MARGIN;
@@ -187,12 +198,14 @@ export function renderPicture(doc: Doc, options: PictureOptions = {}): Picture {
       font={options.font ?? webFont}
       showTitle={showTitle}
       css={options.css}
+      labels={labels}
     />,
   );
   return {
     svg,
     width,
     height,
+    labelWidth: labels,
     plot: {
       x0: MARGIN + labels + PAD_LEFT,
       scale: layout.scale,
