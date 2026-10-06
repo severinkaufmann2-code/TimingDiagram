@@ -30,6 +30,11 @@ export interface PictureOptions {
    * the list of their texts under the drawing. Without it: the pins.
    */
   comments?: 'none' | 'pins' | 'list';
+  /**
+   * The comments in the order of their numbers, when the picture shows only
+   * a part of a diagram: the pins keep the numbers they have in the whole.
+   */
+  numbered?: readonly Comment[];
 }
 
 /** An SVG drawing and its size in pixels. */
@@ -293,8 +298,8 @@ export function renderPicture(source: Doc, options: PictureOptions = {}): Pictur
   // without its comments, the diagram is drawn as if it had none
   const doc = mode === 'none' && source.comments.length > 0 ? { ...source, comments: [] } : source;
   const theme = options.theme ?? LIGHT;
-  const layout = computeLayout(doc, pictureScale(doc, options.scale));
-  const numbered = numberedComments(doc);
+  const numbered = mode === 'none' ? [] : (options.numbered ?? numberedComments(doc));
+  const layout = computeLayout(doc, pictureScale(doc, options.scale), { numbered });
   const showTitle = (options.showTitle ?? true) && doc.title.trim() !== '';
   const labels = options.labelWidth ?? labelColumnWidth(doc, numbered);
   const width = MARGIN + labels + layout.width + MARGIN;

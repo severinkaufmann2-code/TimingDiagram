@@ -371,6 +371,12 @@ function buildLanePins(doc: Doc, rows: readonly Row[], phases: readonly PhaseBox
 export interface LayoutOptions {
   /** Groups that are folded away. */
   folded?: ReadonlySet<string>;
+  /**
+   * The comments in the order of their numbers. Needed when only a part of a
+   * diagram is laid out, e.g. one page of it: the pins then keep the numbers
+   * they have in the whole.
+   */
+  numbered?: readonly Comment[];
 }
 
 export function computeLayout(doc: Doc, scale: number, options: LayoutOptions = {}): Layout {
@@ -379,7 +385,7 @@ export function computeLayout(doc: Doc, scale: number, options: LayoutOptions = 
   const time = (px: number) => start + (px - PAD_LEFT) / scale;
 
   const timeDecimals = doc.time.snap > 0 ? Math.min(6, decimalsOf(doc.time.snap)) : 0;
-  const numbered = numberedComments(doc);
+  const numbered = options.numbered ?? numberedComments(doc);
   const { markers, rows: markerRows, pins: rulerPins } = buildMarkers(doc, x, timeDecimals, numbered);
   const rulerHeight = SCALE_HEIGHT + PILL_MARGIN + markerRows * PILL_ROW + 2;
 

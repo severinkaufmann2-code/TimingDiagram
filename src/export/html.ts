@@ -1,13 +1,15 @@
 /**
  * The diagram as one self-contained web page: the picture, the values table,
- * and the project itself, so the page can be opened in the editor again.
+ * the phases and the comments, and the project itself, so the page can be
+ * opened in the editor again.
  */
 
+import { timeDecimals } from '../model/describe';
 import { decimalsOf, formatNumber } from '../model/numbers';
 import { EMBED_ID, serializeForHtml } from '../model/serialize';
 import type { Doc } from '../model/types';
 import { LIGHT, channelColor } from '../render/theme';
-import { channelLabel } from './data';
+import { channelBlocks, channelLabel, commentLines, phaseRows } from './data';
 import type { Picture } from './picture';
 
 function escapeHtml(text: string): string {
@@ -27,15 +29,22 @@ h2{margin:30px 0 10px;font-size:13px;font-weight:600;letter-spacing:.03em;text-t
 .readout table{border-collapse:collapse;margin-top:2px}
 .readout td{padding:0 0 0 10px;border:0;font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace;text-align:right}
 .readout td:first-child{padding:0;font-family:inherit;text-align:left}
+.readout th{padding:5px 0 0;border:0;font-weight:600;text-align:left}
 .readout i{display:inline-block;width:8px;height:8px;margin-right:6px;border-radius:2px}
 .values{overflow-x:auto}
 .values table{border-collapse:collapse;font-size:13px}
 .values th,.values td{padding:6px 12px;border:1px solid #d9dde3;text-align:left;white-space:nowrap}
 .values thead th{background:#f7f8fa;font-weight:600}
 .values tbody th{font-weight:600}
+.values tr.group th{background:#f7f8fa}
 .values td{font-family:'IBM Plex Mono',ui-monospace,Consolas,monospace}
+.values td.text{font-family:inherit}
 .values td small{margin-left:8px;font:11px 'IBM Plex Sans','Segoe UI',system-ui,sans-serif;color:#5f6875}
 .values td.empty{color:#667080}
+.comments{display:grid;grid-template-columns:30px fit-content(38%) minmax(0,1fr);gap:9px 14px;align-items:baseline;margin:0;padding:0;max-width:120ch;list-style:none}
+.comments li{display:contents}
+.comments .pin{justify-self:start;min-width:17px;height:17px;padding:0 3px;border:1.25px solid #14181f;border-radius:9px;font-size:10.5px;font-weight:600;line-height:14.5px;text-align:center}
+.comments b{font-weight:600}
 .note{max-width:75ch;margin:10px 0 0;font-size:12px;color:#4a5361}
 footer{margin-top:28px;font-size:12px;color:#5f6875}
 @media print{body{padding:0}.diagram,.values{overflow:visible}.diagram svg{min-width:0}.readout{display:none!important}}
@@ -105,13 +114,26 @@ const READOUT_SCRIPT = `
     readout.textContent = '';
     add(readout, 'b', format(time, geometry.decimals, true) + (data.time.unit ? ' ' + data.time.unit : ''));
     var table = add(readout, 'table');
-    data.channels.forEach(function (channel, index) {
+    function addChannel(index) {
+      var channel = data.channels[index];
       var analog = channel.kind === 'analog';
       var row = add(table, 'tr');
       var name = add(row, 'td');
       add(name, 'i').style.background = geometry.colors[index];
       name.appendChild(document.createTextNode(channel.name));
       add(row, 'td', format(valueAt(channel, time), analog ? geometry.valueDecimals[index] : 2) + (analog && channel.unit ? ' ' + channel.unit : ''));
+    }
+    if (geometry.groups.length === 0) {
+      data.channels.forEach(function (channel, index) { addChannel(index); });
+    }
+    // with groups: each under its title, with the phase it is in at this time
+    geometry.groups.forEach(function (group) {
+      var phase = '';
+      group.phases.forEach(function (candidate) {
+        if (time >= candidate.from && time < candidate.to) phase = candidate.title;
+      });
+      add(add(table, 'tr'), 'th', group.title + (phase ? ' \u00b7 ' + phase : '')).colSpan = 2;
+      group.channels.forEach(addChannel);
     });
     readout.style.display = 'block';
     var left = event.clientX + 16, top = event.clientY + 16;
@@ -125,13 +147,16 @@ const READOUT_SCRIPT = `
 `.trim();
 
 function valuesTable(doc: Doc): string {
-  const minDecimals = doc.time.snap > 0 ? Math.min(6, decimalsOf(doc.time.snap)) : 0;
+  const minDecimals = timeDecimals(doc);
   const unit = doc.time.unit.trim();
   const head = doc.points
     .map((point) => `<th scope="col">${escapeHtml(formatNumber(point.time, minDecimals))}${unit ? ` ${escapeHtml(unit)}` : ''}</th>`)
     .join('');
-  const body = doc.channels
-    .map((channel) => {
+  const rows: string[] = [];
+  for (const block of channelBlocks(doc)) {
+    // a group gets a heading row across the table
+    if (block.group) rows.push(`<tr class="group"><th scope="rowgroup" colspan="${doc.points.length + 2}">${escapeHtml(block.group.title)}</th></tr>`);
+    for (const channel of block.channels) {
       const cells = doc.points
         .map((point) => {
           const cell = channel.cells[point.id];
@@ -139,18 +164,65 @@ function valuesTable(doc: Doc): string {
           return `<td>${escapeHtml(formatNumber(cell.value))}<small>${cell.mode}</small></td>`;
         })
         .join('');
-      return `<tr><th scope="row">${escapeHtml(channelLabel(channel))}</th><td>${escapeHtml(formatNumber(channel.initial))}</td>${cells}</tr>`;
-    })
-    .join('\n');
+      rows.push(`<tr><th scope="row">${escapeHtml(channelLabel(channel))}</th><td>${escapeHtml(formatNumber(channel.initial))}</td>${cells}</tr>`);
+    }
+  }
   return `<table>
 <thead><tr><th scope="col">Channel</th><th scope="col">Initial value</th>${head}</tr></thead>
 <tbody>
-${body}
+${rows.join('\n')}
 </tbody>
 </table>`;
 }
 
-export function buildHtml(doc: Doc, picture: Picture, fontCss: string, exportedOn: Date = new Date()): string {
+/** The phases of all groups as a table. Empty when there are none. */
+function phasesSection(doc: Doc): string {
+  const rows = phaseRows(doc);
+  if (rows.length === 0) return '';
+  const minDecimals = timeDecimals(doc);
+  const unit = doc.time.unit.trim();
+  const time = (value: number) => `${escapeHtml(formatNumber(value, minDecimals))}${unit ? ` ${escapeHtml(unit)}` : ''}`;
+  const body = rows
+    .map(
+      (row) =>
+        `<tr><th scope="row">${escapeHtml(row.group)}</th><td class="text">${escapeHtml(row.phase)}</td><td>${time(row.from)}</td><td>${time(row.to)}</td><td>${time(row.duration)}</td></tr>`,
+    )
+    .join('\n');
+  return `<h2>Phases</h2>
+<div class="values phases">
+<table>
+<thead><tr><th scope="col">Group</th><th scope="col">Phase</th><th scope="col">From</th><th scope="col">To</th><th scope="col">Duration</th></tr></thead>
+<tbody>
+${body}
+</tbody>
+</table>
+</div>
+`;
+}
+
+/** The comments as a list, numbered like their pins in the picture. Empty when there are none. */
+function commentsSection(doc: Doc): string {
+  const lines = commentLines(doc);
+  if (lines.length === 0) return '';
+  const items = lines
+    .map(
+      (line) =>
+        `<li><span class="pin">${line.number}</span><b>${escapeHtml(line.place)}</b><span>${escapeHtml(line.text).replace(/\r?\n/g, '<br>')}</span></li>`,
+    )
+    .join('\n');
+  return `<h2>Comments</h2>
+<ol class="comments">
+${items}
+</ol>
+`;
+}
+
+/**
+ * Builds the page. `picture` is the diagram as drawn for it. With `comments`
+ * false the page leaves the comments out; the diagram it carries for the
+ * editor keeps them.
+ */
+export function buildHtml(doc: Doc, picture: Picture, fontCss: string, exportedOn: Date = new Date(), comments = true): string {
   const title = doc.title.trim() || 'Timing diagram';
   const date = `${exportedOn.getFullYear()}-${String(exportedOn.getMonth() + 1).padStart(2, '0')}-${String(exportedOn.getDate()).padStart(2, '0')}`;
   const details = {
@@ -159,6 +231,12 @@ export function buildHtml(doc: Doc, picture: Picture, fontCss: string, exportedO
     colors: doc.channels.map((channel) => channelColor(LIGHT, channel.color)),
     decimals: Math.max(2, decimalsOf(doc.time.snap)),
     valueDecimals: doc.channels.map((channel) => Math.min(6, decimalsOf((channel.max - channel.min) / 1000))),
+    // for the readout: the channels of every group, and from when to when its phases last
+    groups: doc.groups.map((group) => ({
+      title: group.title,
+      channels: doc.channels.flatMap((channel, index) => (channel.group === group.id ? [index] : [])),
+      phases: phaseRows({ ...doc, groups: [group] }).map((row) => ({ title: row.phase, from: row.from, to: row.to })),
+    })),
   };
   // the readout needs to know where the timeline sits inside the picture
   const svg = picture.svg.replace('<svg ', `<svg data-geometry="${escapeHtml(JSON.stringify(details))}" `);
@@ -186,7 +264,7 @@ ${svg}
 ${valuesTable(doc)}
 </div>
 <p class="note">Each column is a transition point. <b>step</b>: the channel keeps its previous value up to that point, then jumps. <b>ramp</b>: the channel changes gradually from its previous value. An empty cell means the channel does not change at that point.</p>
-<footer>Exported on ${date}. This page contains the diagram itself and can be opened in the Timing Diagram editor to continue editing.</footer>
+${phasesSection(doc)}${comments ? commentsSection(doc) : ''}<footer>Exported on ${date}. This page contains the diagram itself and can be opened in the Timing Diagram editor to continue editing.</footer>
 </main>
 <script type="application/json" id="${EMBED_ID}">${serializeForHtml(doc)}</script>
 <script>

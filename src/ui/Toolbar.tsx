@@ -137,6 +137,8 @@ function AddMenu() {
 
 function ExportMenu() {
   const pdfPage = useStore((state) => state.pdfPage);
+  const exportComments = useStore((state) => state.exportComments);
+  const hasComments = useStore((state) => state.doc.comments.length > 0);
   return (
     <>
       <MenuItem
@@ -165,6 +167,20 @@ function ExportMenu() {
           onChange={(page) => useStore.getState().setPdfPage(page)}
         />
       </div>
+      {hasComments && (
+        <div className="menu-option">
+          <span className="menu-option-label">Comments</span>
+          <Segmented<'show' | 'hide'>
+            label="Comments in exports"
+            value={exportComments ? 'show' : 'hide'}
+            options={[
+              { value: 'show', label: 'Show', title: 'Pins in the drawing, and the texts as a list' },
+              { value: 'hide', label: 'Hide', title: 'A drawing without pins, and no list of comments' },
+            ]}
+            onChange={(choice) => useStore.getState().setExportComments(choice === 'show')}
+          />
+        </div>
+      )}
     </>
   );
 }

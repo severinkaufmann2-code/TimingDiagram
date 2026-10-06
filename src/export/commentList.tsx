@@ -24,6 +24,8 @@ export interface CommentRow {
   lines: string[];
   /** Height of the row, with the air under it. */
   height: number;
+  /** True for the rest of a comment that began in the block before: it is drawn without number and place. */
+  continued?: boolean;
 }
 
 export interface CommentList {
@@ -76,11 +78,13 @@ export function CommentRows({
         const y = top;
         top += row.height;
         return (
-          <g key={row.number}>
-            <PinMark cx={row.number > 9 ? 10 : 7} cy={y + 8} number={row.number} theme={theme} font={font} />
-            <text x={PIN_COLUMN} y={y + 12} {...font('sans600')} fontSize={FONT_SIZE} fill={theme.text}>
-              {row.place}
-            </text>
+          <g key={`${row.number}${row.continued ? ' continued' : ''}`}>
+            {!row.continued && <PinMark cx={row.number > 9 ? 10 : 7} cy={y + 8} number={row.number} theme={theme} font={font} />}
+            {!row.continued && (
+              <text x={PIN_COLUMN} y={y + 12} {...font('sans600')} fontSize={FONT_SIZE} fill={theme.text}>
+                {row.place}
+              </text>
+            )}
             {row.lines.map((line, index) => (
               <text key={index} x={list.textX} y={y + 12 + index * LINE_HEIGHT} {...font('sans400')} fontSize={FONT_SIZE} fill={theme.text}>
                 {line}
