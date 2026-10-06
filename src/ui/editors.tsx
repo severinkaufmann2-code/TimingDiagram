@@ -1,16 +1,19 @@
 /** The small panels for typing exact numbers: one for a value, one for a transition point. */
 
-import type { ReactNode, RefObject } from 'react';
+import { useEffect, type ReactNode, type RefObject } from 'react';
+import { findComment, numberedComments } from '../model/comments';
+import { commentPlace } from '../model/describe';
 import { clearValue, removePoint, setMode, setPointTime, setValue } from '../model/doc';
 import { anchorAt } from '../model/moments';
 import { formatNumber, niceStep } from '../model/numbers';
 import { findPhase, phaseSpan, removePhase, renamePhase, setPhaseEdge } from '../model/phases';
-import { INITIAL, type Mode } from '../model/types';
+import { INITIAL, type Comment, type Mode } from '../model/types';
 import { valueAt } from '../model/waveform';
 import { rowY, valueStep, type Layout } from '../render/layout';
 import { useStore } from '../state/store';
+import { applyCommentText, dropComment, settleComment } from './comments';
 import { HEADER_WIDTH } from './constants';
-import { NumberField, TextField } from './fields';
+import { NumberField, TextArea, TextField } from './fields';
 import { CloseIcon, RampIcon, StepIcon, TrashIcon } from './icons';
 import { Popover, type AnchorRect } from './Popover';
 
@@ -327,6 +330,97 @@ export function PhaseEditor({ layout, lanesSvg, stage }: EditorProps & { lanesSv
         >
           <TrashIcon /> Delete
         </button>
+      </div>
+    </Popover>
+  );
+}
+
+/** The text of the selected comment, at its pin. */
+export function CommentEditor({ layout, stage }: EditorProps) {
+  const doc = useStore((state) => state.doc);
+  const selection = useStore((state) => state.selection);
+  const panel = useStore((state) => state.panel);
+
+  if (panel?.type !== 'comment' || selection.kind !== 'comment') return null;
+  const comment = findComment(doc, selection.commentId);
+  if (!comment) return null;
+  return (
+    <CommentPanel
+      key={comment.id}
+      comment={comment}
+      number={numberedComments(doc).indexOf(comment) + 1}
+      place={commentPlace(doc, comment)}
+      layout={layout}
+      stage={stage}
+    />
+  );
+}
+
+function CommentPanel({ comment, number, place, layout, stage }: EditorProps & { comment: Comment; number: number; place: string }) {
+  const id = comment.id;
+  const closePanel = useStore((state) => state.closePanel);
+
+  // When the panel goes, for whatever reason, the editing of the comment is over.
+  // Asked a moment later: a panel that is only drawn anew is still open then.
+  useEffect(
+    () => () => {
+      queueMicrotask(() => {
+        const state = useStore.getState();
+        const open = state.panel?.type === 'comment' && state.selection.kind === 'comment' && state.selection.commentId === id;
+        if (!open) settleComment(id);
+      });
+    },
+    [id],
+  );
+
+  /** The pin in window coordinates, or null while it is scrolled out of sight or folded away. */
+  const anchor = (): AnchorRect | null => {
+    const frame = stage.current?.getBoundingClientRect();
+    const pin = stage.current?.querySelector(`[data-pin="${id}"]`);
+    if (!frame || !pin) return null;
+    const rect = pin.getBoundingClientRect();
+    const drawn = pin.closest('.ruler-svg, .lanes-svg') !== null;
+    const inLanes = pin.closest('.lanes-svg') !== null;
+    const visible =
+      rect.bottom > frame.top &&
+      rect.top < frame.bottom &&
+      rect.left < frame.right &&
+      (!drawn || rect.left >= frame.left + HEADER_WIDTH - 2) &&
+      (!inLanes || rect.top >= frame.top + layout.rulerHeight - 2);
+    return visible ? { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom } : null;
+  };
+
+  return (
+    <Popover anchor={anchor} side="bottom" arrow label={`Comment ${number}`} onClose={closePanel}>
+      <div className="comment-editor">
+        <div className="comment-editor-head">
+          <span className="pin" data-selected>
+            {number}
+          </span>
+          <span className="comment-editor-where">{place}</span>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Delete this comment"
+            title="Delete this comment"
+            onClick={() => {
+              dropComment(id);
+              closePanel();
+            }}
+          >
+            <TrashIcon />
+          </button>
+        </div>
+        <TextArea
+          className="field comment-field"
+          ariaLabel="Comment"
+          value={comment.text}
+          autoFocus
+          placeholder="What is there to say about this?"
+          onCommit={(text) => applyCommentText(id, text)}
+          onEnter={closePanel}
+        />
+        <span className="comment-editor-foot">Enter to finish · Shift + Enter for a new line</span>
       </div>
     </Popover>
   );

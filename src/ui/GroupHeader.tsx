@@ -65,9 +65,11 @@ interface GroupHeaderProps {
   channels: number;
   /** Pins of the comments on the group. */
   pins?: ReactNode;
+  /** A comment is about to be put on the group. */
+  dropHere?: boolean;
 }
 
-export function GroupHeader({ band, channels, pins }: GroupHeaderProps) {
+export function GroupHeader({ band, channels, pins, dropHere }: GroupHeaderProps) {
   const { group } = band;
   const id = group.id;
   const rename = useRef(isFocusWanted(id)).current;
@@ -105,7 +107,7 @@ export function GroupHeader({ band, channels, pins }: GroupHeaderProps) {
   };
 
   return (
-    <div className="group" data-group={id} data-folded={band.folded || undefined} style={{ height: GROUP_BAR }}>
+    <div className="group" data-group={id} data-folded={band.folded || undefined} data-drop={dropHere || undefined} style={{ height: GROUP_BAR }}>
       <button
         type="button"
         className="channel-grip"

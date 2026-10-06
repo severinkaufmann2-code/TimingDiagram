@@ -3,8 +3,46 @@
  * Enter is pressed, and put the old value back on Escape. One edit is one undo step.
  */
 
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { clean, formatNumber, parseNumber } from '../model/numbers';
+
+/**
+ * What was typed into a field but is not applied yet.
+ *
+ * Besides the state that draws the field, a reference always holds the
+ * unapplied text. Two things need that. Enter applies the text and then
+ * leaves the field, which asks to apply it once more before the field has
+ * been drawn again. And a panel that is closed by a click elsewhere is taken
+ * away before its field hears that it lost the focus: `applyOnRemoval` then
+ * gets what was typed, so nothing typed is lost.
+ */
+function useDraft(applyOnRemoval: (typed: string) => void) {
+  const [draft, setDraftState] = useState<string | null>(null);
+  const pending = useRef<string | null>(null);
+  const setDraft = (next: string | null) => {
+    pending.current = next;
+    setDraftState(next);
+  };
+  /** Hands out the unapplied text and forgets it. Null when there is none. */
+  const take = (): string | null => {
+    const typed = pending.current;
+    if (typed !== null) setDraft(null);
+    return typed;
+  };
+
+  const apply = useRef(applyOnRemoval);
+  apply.current = applyOnRemoval;
+  useEffect(
+    () => () => {
+      const typed = pending.current;
+      pending.current = null;
+      if (typed !== null) apply.current(typed);
+    },
+    [],
+  );
+
+  return { draft, setDraft, take };
+}
 
 interface CommonProps {
   ariaLabel: string;
@@ -50,14 +88,12 @@ export function TextField({
   onEnter,
   onKey,
 }: TextFieldProps) {
-  const [draft, setDraftState] = useState<string | null>(null);
-  // Enter applies the text and then leaves the field, which asks to apply it once more
-  // before the field has been drawn again. The reference always knows what is still unapplied.
-  const pending = useRef<string | null>(null);
-  const setDraft = (next: string | null) => {
-    pending.current = next;
-    setDraftState(next);
+  const apply = (typed: string) => {
+    const next = typed.trim();
+    if (next === value || (required && next === '')) return;
+    onCommit(next);
   };
+  const { draft, setDraft, take } = useDraft(apply);
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -70,12 +106,8 @@ export function TextField({
   }, []);
 
   const commit = () => {
-    const typed = pending.current;
-    if (typed === null) return;
-    const next = typed.trim();
-    setDraft(null);
-    if (next === value || (required && next === '')) return;
-    onCommit(next);
+    const typed = take();
+    if (typed !== null) apply(typed);
   };
 
   return (
@@ -143,7 +175,22 @@ export function NumberField({
   onEnter,
   onKey,
 }: NumberFieldProps) {
-  const [draft, setDraft] = useState<string | null>(null);
+  /** Applies a typed text. Returns false when it was not a number. */
+  const apply = (text: string): boolean => {
+    const typed = text.trim();
+    if (typed === '') {
+      if (value !== null) onClear?.();
+      return true;
+    }
+    const parsed = parseNumber(typed);
+    if (parsed === null) {
+      onInvalid?.(typed);
+      return false;
+    }
+    if (parsed !== value) onCommit(parsed);
+    return true;
+  };
+  const { draft, setDraft, take } = useDraft(apply);
   const [invalid, setInvalid] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const shown = value === null ? '' : formatNumber(value, minDecimals);
@@ -159,22 +206,11 @@ export function NumberField({
 
   /** Applies the typed text. Returns false when it was not a number. */
   const commit = (): boolean => {
-    if (draft === null) return true;
-    const typed = draft.trim();
-    setDraft(null);
-    if (typed === '') {
-      if (value !== null) onClear?.();
-      return true;
-    }
-    const parsed = parseNumber(typed);
-    if (parsed === null) {
-      setInvalid(true);
-      window.setTimeout(() => setInvalid(false), 900);
-      onInvalid?.(typed);
-      return false;
-    }
-    if (parsed !== value) onCommit(parsed);
-    return true;
+    const typed = take();
+    if (typed === null || apply(typed)) return true;
+    setInvalid(true);
+    window.setTimeout(() => setInvalid(false), 900);
+    return false;
   };
 
   return (
@@ -214,6 +250,85 @@ export function NumberField({
           onCommit(clean(base + (event.key === 'ArrowUp' ? step : -step) * factor));
         } else if (onKey?.(event)) {
           event.preventDefault();
+        }
+      }}
+    />
+  );
+}
+
+interface TextAreaProps {
+  value: string;
+  onCommit: (value: string) => void;
+  ariaLabel: string;
+  className?: string;
+  autoFocus?: boolean;
+  placeholder?: string;
+  maxLength?: number;
+  /** Runs after Enter has applied the text. */
+  onEnter?: () => void;
+  /** Runs when the field is left, whether or not something was applied. */
+  onLeave?: () => void;
+}
+
+/**
+ * A text field for more than one line. It grows with its text. Enter applies
+ * the text, Shift + Enter starts a new line, Escape puts the old text back.
+ */
+export function TextArea({ value, onCommit, ariaLabel, className, autoFocus, placeholder, maxLength = 2000, onEnter, onLeave }: TextAreaProps) {
+  const apply = (typed: string) => {
+    const next = typed.trim();
+    if (next !== value) onCommit(next);
+  };
+  const { draft, setDraft, take } = useDraft(apply);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const shown = draft ?? value;
+
+  useEffect(() => {
+    if (autoFocus) {
+      area.current?.focus();
+      area.current?.select();
+    }
+    // only when the field appears
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // as tall as the text, up to a limit; then it scrolls
+  useLayoutEffect(() => {
+    const element = area.current;
+    if (!element) return;
+    element.style.height = 'auto';
+    element.style.height = `${Math.min(element.scrollHeight + 2, 190)}px`;
+  }, [shown]);
+
+  const commit = () => {
+    const typed = take();
+    if (typed !== null) apply(typed);
+  };
+
+  return (
+    <textarea
+      ref={area}
+      className={className}
+      aria-label={ariaLabel}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      rows={1}
+      spellCheck={false}
+      value={shown}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        commit();
+        onLeave?.();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          commit();
+          onEnter?.();
+          event.currentTarget.blur();
+        } else if (event.key === 'Escape' && draft !== null) {
+          setDraft(null);
+          event.stopPropagation();
         }
       }}
     />

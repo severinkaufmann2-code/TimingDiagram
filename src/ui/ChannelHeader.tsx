@@ -52,9 +52,11 @@ interface ChannelHeaderProps {
   selected: boolean;
   /** Pins of the comments on the channel as a whole. */
   pins?: ReactNode;
+  /** A comment is about to be put on the channel as a whole. */
+  dropHere?: boolean;
 }
 
-export function ChannelHeader({ row, color, selected, pins }: ChannelHeaderProps) {
+export function ChannelHeader({ row, color, selected, pins, dropHere }: ChannelHeaderProps) {
   const { channel } = row;
   const id = channel.id;
   const settingsOpen = useStore((state) => state.panel?.type === 'channel' && state.panel.channelId === id);
@@ -116,7 +118,7 @@ export function ChannelHeader({ row, color, selected, pins }: ChannelHeaderProps
   };
 
   return (
-    <div className="channel" data-channel={id} data-selected={selected || undefined} style={{ height: row.height }}>
+    <div className="channel" data-channel={id} data-selected={selected || undefined} data-drop={dropHere || undefined} style={{ height: row.height }}>
       <button
         type="button"
         className="channel-grip"

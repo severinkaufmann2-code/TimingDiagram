@@ -9,6 +9,7 @@ import { Segmented } from './editors';
 import { NumberField, TextField } from './fields';
 import {
   ChevronDownIcon,
+  CommentIcon,
   ExportIcon,
   FileIcon,
   FitIcon,
@@ -256,7 +257,8 @@ export function Toolbar() {
   const canRedo = useStore((state) => state.future.length > 0);
   const zoom = useStore((state) => state.zoom);
   const theme = useStore((state) => state.theme);
-  const { change, undo, redo, setZoom, setTheme } = useStore.getState();
+  const placing = useStore((state) => state.placing);
+  const { change, undo, redo, setZoom, setTheme, setPlacing } = useStore.getState();
   const unit = time.unit.trim();
 
   return (
@@ -289,6 +291,15 @@ export function Toolbar() {
         <MenuButton name="add" className="button" title="Add a channel, a transition point or a group" menu={() => <AddMenu />}>
           <PlusIcon /> Add <ChevronDownIcon />
         </MenuButton>
+        <button
+          type="button"
+          className="button"
+          aria-pressed={placing}
+          title="Pin a comment to the diagram: click here, then where it belongs (C)"
+          onClick={() => setPlacing(!placing)}
+        >
+          <CommentIcon /> Comment
+        </button>
       </div>
 
       <span className="toolbar-divider" aria-hidden="true" />

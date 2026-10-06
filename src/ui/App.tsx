@@ -4,9 +4,10 @@ import { removePhase } from '../model/phases';
 import { INITIAL } from '../model/types';
 import { useStore } from '../state/store';
 import { loadFile, openProject, saveCurrentProject, zoomBy } from './actions';
+import { BottomPanel } from './BottomPanel';
+import { dropComment } from './comments';
 import { Stage } from './Stage';
 import { Toolbar } from './Toolbar';
-import { ValuesTable } from './ValuesTable';
 
 /** True while the keyboard focus is somewhere that uses typing keys itself. */
 function isTyping(target: EventTarget | null): boolean {
@@ -42,8 +43,13 @@ function useGlobalKeys() {
         event.preventDefault();
         state.redo();
       } else if (key === 'escape') {
-        if (state.panel) state.closePanel();
+        if (state.placing) state.setPlacing(false);
+        else if (state.panel) state.closePanel();
         else if (state.selection.kind !== 'none') state.select({ kind: 'none' });
+      } else if (key === 'c' && !command && !event.altKey) {
+        // pick up the pin for a comment, or put it down again
+        event.preventDefault();
+        state.setPlacing(!state.placing);
       } else if (key === 'delete' || key === 'backspace') {
         const { selection } = state;
         if (selection.kind === 'point') {
@@ -55,6 +61,9 @@ function useGlobalKeys() {
         } else if (selection.kind === 'phase') {
           event.preventDefault();
           state.change((doc) => removePhase(doc, selection.groupId, selection.phaseId));
+        } else if (selection.kind === 'comment') {
+          event.preventDefault();
+          dropComment(selection.commentId);
         }
       }
     };
@@ -134,6 +143,7 @@ function Notice() {
 export function App() {
   const theme = useStore((state) => state.theme);
   const title = useStore((state) => state.doc.title);
+  const placing = useStore((state) => state.placing);
 
   useGlobalKeys();
   useWheelZoom();
@@ -152,13 +162,22 @@ export function App() {
       <Toolbar />
       <main className="workspace">
         <Stage />
-        <ValuesTable />
+        <BottomPanel />
       </main>
-      <footer className="statusbar">
-        <span>Click the lane under the ruler to add a transition point</span>
-        <span>Drag a point to move it, click it to type an exact time</span>
-        <span>Drag a dot to change a value, click it to type one and choose Step or Ramp</span>
-      </footer>
+      {placing ? (
+        <footer className="statusbar" data-placing>
+          <span>Click where the comment belongs: a spot in a lane, a transition point, a phase or a name</span>
+          <span>
+            <kbd>Esc</kbd> cancels
+          </span>
+        </footer>
+      ) : (
+        <footer className="statusbar">
+          <span>Click the lane under the ruler to add a transition point</span>
+          <span>Drag a point to move it, click it to type an exact time</span>
+          <span>Drag a dot to change a value, click it to type one and choose Step or Ramp</span>
+        </footer>
+      )}
       <Notice />
     </div>
   );

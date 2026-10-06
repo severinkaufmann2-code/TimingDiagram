@@ -910,11 +910,6 @@ kbd {
 .values-toggle:hover {
   background: var(--band);
 }
-.values-toggle h2 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 600;
-}
 .values-hint {
   font-size: 12px;
   color: var(--muted);
@@ -1212,4 +1207,229 @@ kbd {
 }
 .editor-edge {
   width: 62px;
+}
+
+/* ───────────── comments ───────────── */
+
+textarea {
+  font: inherit;
+  color: inherit;
+}
+.button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+.pin {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3px;
+  border: 1.25px solid var(--ink);
+  border-radius: 8px;
+  background: var(--surface);
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+}
+button.pin {
+  cursor: pointer;
+  touch-action: none;
+}
+.pin[data-selected] {
+  background: var(--ink);
+  color: var(--surface);
+}
+.pin-mark {
+  outline: none;
+  cursor: pointer;
+  touch-action: none;
+}
+.pin-mark:focus-visible .pin-hit {
+  stroke: var(--focus);
+  stroke-width: 2;
+}
+.corner-pins {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  display: flex;
+  gap: 3px;
+}
+/* the comment tool is picked up: every place in the diagram is a place for the pin */
+.stage[data-placing],
+.stage[data-placing] * {
+  cursor: crosshair !important;
+}
+.statusbar[data-placing] {
+  color: var(--ink);
+}
+.channel[data-drop],
+.group[data-drop],
+.stage-corner[data-drop] {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.comment-editor {
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+}
+.comment-editor-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.comment-editor-where {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.comment-editor .icon-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+}
+.comment-field {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  height: 52px;
+  padding: 6px 8px;
+  line-height: 1.4;
+  resize: none;
+}
+.comment-editor-foot {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ───────────── the panel under the diagram: its tabs, and the list of comments ───────────── */
+
+.tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.tab {
+  height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+.tab:hover {
+  background: var(--band);
+  color: var(--ink);
+}
+.tab[aria-selected='true'] {
+  background: var(--segment);
+  color: var(--ink);
+}
+.tab-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+.values-head .text-button {
+  margin-left: auto;
+}
+.comments {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.comments-empty {
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--muted);
+}
+.comment-row {
+  display: grid;
+  grid-template-columns: 44px 250px minmax(0, 1fr) 40px;
+  align-items: center;
+  min-height: 36px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.comment-row:last-child {
+  border-bottom: 0;
+}
+.comment-row[data-selected] {
+  background: var(--band);
+}
+.comment-pin {
+  justify-self: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  cursor: pointer;
+}
+.comment-pin:hover {
+  background: var(--segment);
+}
+.comment-where {
+  justify-self: start;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 6px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.comment-where:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.comment-text {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin: 3px 0;
+  padding: 4px 7px;
+  border-color: transparent;
+  background: transparent;
+  line-height: 1.4;
+  resize: none;
+}
+.comment-text:hover {
+  border-color: var(--line-strong);
+}
+.comment-text:focus {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+.comment-remove {
+  justify-self: center;
+  color: var(--muted);
 }

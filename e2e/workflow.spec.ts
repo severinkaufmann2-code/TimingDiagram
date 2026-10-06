@@ -234,3 +234,29 @@ test('dark colours can be switched on and are remembered', async ({ page }) => {
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 });
+
+test('what was typed into a panel is applied when the panel is closed by a click elsewhere', async ({ page }) => {
+  await openApp(page);
+  // a value
+  await dot(page, 'c5', 'p4').click();
+  await page.getByLabel(/^Value of Pressure/).fill('4.5');
+  await page.mouse.click(await xOfTime(page, 7.5), (await lane(page, 'c1').boundingBox())!.y + 30);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByLabel('Pressure at transition point 4')).toHaveValue('4.5');
+  // the exact time of a transition point
+  await marker(page, '0.5').click();
+  await page.getByLabel('Exact time of this transition point').fill('0.7');
+  await page.mouse.click(await xOfTime(page, 7.5, ['1.0', '6.5']), (await lane(page, 'c1').boundingBox())!.y + 30);
+  await expect(marker(page, '0.7')).toBeVisible();
+  // each is one step back; Escape still discards what was typed
+  await marker(page, '0.7').click();
+  await page.getByLabel('Exact time of this transition point').fill('0.9');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect(marker(page, '0.7')).toBeVisible();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(marker(page, '0.5')).toBeVisible();
+  await expect(page.getByLabel('Pressure at transition point 4')).toHaveValue('6');
+  await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
+});

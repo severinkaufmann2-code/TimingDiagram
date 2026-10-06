@@ -71,6 +71,8 @@ interface Actions {
   change(update: (doc: Doc) => Doc): void;
   beginGesture(): void;
   endGesture(): void;
+  /** Ends the running gesture by putting the diagram back as it was when the gesture began. */
+  cancelGesture(): void;
   /** Replaces the whole diagram (new, open). Undo brings the old one back. */
   replaceDoc(doc: Doc): void;
   undo(): void;
@@ -193,6 +195,12 @@ export const useStore = create<State & Actions>()((set, get) => ({
     if (!gestureBase) return;
     if (doc === gestureBase) set({ gestureBase: null });
     else set({ gestureBase: null, past: [...past, gestureBase].slice(-HISTORY_LIMIT), future: [] });
+  },
+
+  cancelGesture() {
+    const state = get();
+    if (!state.gestureBase) return;
+    set({ doc: state.gestureBase, gestureBase: null, ...reconcile(state.gestureBase, state.selection, state.panel) });
   },
 
   replaceDoc(doc) {
