@@ -8,7 +8,8 @@ import type { ReactNode } from 'react';
 import { clamp, formatNumber } from '../model/numbers';
 import type { Doc } from '../model/types';
 import { channelVertices } from '../model/waveform';
-import { PAD_LEFT, crisp, rowY, type Layout, type Marker, type Row } from './layout';
+import { GROUP_BAR, PAD_LEFT, PIN_STEP, crisp, pinWidth, rowY, type Layout, type Marker, type PinPlace, type Row } from './layout';
+import { fitText } from './text';
 import { channelColor, webFont, type DiagramTheme, type FontResolver } from './theme';
 
 interface Base {
@@ -209,6 +210,142 @@ export function Dot({
         />
       )}
       {children}
+    </g>
+  );
+}
+
+/** Title bars of the groups: the tinted strip across the timeline, and the lines above and below it. */
+export function GroupBars({ layout, theme }: Base) {
+  return (
+    <g>
+      {layout.bands.map((band) => (
+        <g key={band.group.id}>
+          <rect x={0} y={band.top} width={layout.width} height={GROUP_BAR} fill={theme.markerLane} />
+          {band.top > 0 && <path d={`M0 ${band.top + 0.5}H${layout.width}`} fill="none" stroke={theme.axis} strokeWidth={1} />}
+          {band.rows.length > 0 && (
+            <path d={`M0 ${band.top + GROUP_BAR + 0.5}H${layout.width}`} fill="none" stroke={theme.rule} strokeWidth={1} />
+          )}
+        </g>
+      ))}
+    </g>
+  );
+}
+
+/** The phases of all groups, each a labelled box inside the bar of its group. */
+export function PhaseBars({ layout, theme, font = webFont, selectedPhaseId }: Base & { selectedPhaseId?: string }) {
+  return (
+    <g>
+      {layout.phases.map((box) => {
+        const selected = box.phase.id === selectedPhaseId;
+        // pins of comments sit at the right end of the box
+        const room = box.width - box.pins * PIN_STEP - (box.pins > 0 ? 3 : 0);
+        return (
+          <g key={box.phase.id}>
+            <rect
+              x={box.x}
+              y={box.y}
+              width={box.width}
+              height={box.height}
+              rx={4}
+              fill={theme.surface}
+              stroke={selected ? theme.selected : theme.guide}
+              strokeWidth={selected ? 1.5 : 1}
+            />
+            <text
+              x={round(box.x + room / 2)}
+              y={box.y + box.height / 2 + 4}
+              textAnchor="middle"
+              {...font('sans600')}
+              fontSize={11.5}
+              fill={theme.text}
+            >
+              {fitText(box.phase.title, 'sans600', 11.5, room - 10)}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+/** The numbered marker of a comment. */
+export function PinMark({
+  cx,
+  cy,
+  number,
+  theme,
+  font = webFont,
+  selected = false,
+  faint = false,
+}: {
+  cx: number;
+  cy: number;
+  number: number;
+  theme: DiagramTheme;
+  font?: FontResolver;
+  selected?: boolean;
+  faint?: boolean;
+}) {
+  const width = pinWidth(number);
+  return (
+    <g opacity={faint ? 0.6 : 1}>
+      <rect
+        x={cx - width / 2}
+        y={cy - 7}
+        width={width}
+        height={14}
+        rx={7}
+        fill={selected ? theme.selected : theme.surface}
+        stroke={theme.selected}
+        strokeWidth={1.25}
+        strokeDasharray={faint ? '2.5 2' : undefined}
+      />
+      <text x={cx} y={cy + 3.4} textAnchor="middle" {...font('sans600')} fontSize={9.5} fill={selected ? theme.onSelected : theme.text}>
+        {number}
+      </text>
+    </g>
+  );
+}
+
+/**
+ * A pin at its place, with the short stroke that ties it to its moment. At a
+ * plain time, where no line of a transition point runs, it brings its own.
+ */
+export function PlacedPin({
+  pin,
+  theme,
+  font = webFont,
+  selected = false,
+  faint = false,
+}: {
+  pin: PinPlace;
+  theme: DiagramTheme;
+  font?: FontResolver;
+  selected?: boolean;
+  faint?: boolean;
+}) {
+  const x = crisp(pin.x);
+  const stalk = pin.where === 'ruler' ? `M${x} ${pin.top + 1}V${pin.top + 19}` : `M${x} ${pin.top + 2}V${pin.top + 17}`;
+  return (
+    <g>
+      {pin.where !== 'phase' && pin.free && <path d={stalk} fill="none" stroke={theme.selected} strokeWidth={1} opacity={faint ? 0.6 : 1} />}
+      {pin.where === 'lane' && (
+        <path d={`M${x} ${pin.cy}H${pin.cx - pinWidth(pin.number) / 2}`} fill="none" stroke={theme.selected} strokeWidth={1} opacity={faint ? 0.6 : 1} />
+      )}
+      <PinMark cx={pin.cx} cy={pin.cy} number={pin.number} theme={theme} font={font} selected={selected} faint={faint} />
+    </g>
+  );
+}
+
+/** The pins of the comments, either those in the ruler or those in the lanes. */
+export function Pins({ layout, theme, font = webFont, ruler = false }: Base & { ruler?: boolean }) {
+  return (
+    <g>
+      {layout.pins
+        .filter((pin) => (pin.where === 'ruler') === ruler)
+        .map((pin) => (
+          <PlacedPin key={pin.comment.id} pin={pin} theme={theme} font={font} />
+        ))}
     </g>
   );
 }
