@@ -1,6 +1,7 @@
 # Timing Diagram Editor – Plan
 
 Status: **approved on 2026-10-06 and built.** Section 8 lists where the result differs from this plan.
+Next step, not built yet: [groups, phases and comments](PLAN-groups-comments.md).
 Original requirements: [`Ideas.txt`](../Ideas.txt).
 Mockup: [`mockup/index.html`](mockup/index.html) (open it in a browser), shown below.
 
