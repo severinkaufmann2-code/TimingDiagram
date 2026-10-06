@@ -1,8 +1,10 @@
 # Timing Diagram Editor – Plan
 
-Status: **proposed, waiting for approval** (2026-10-06).
-Mockup: <https://claude.ai/artifact/3VsoA4vNF8NftcNzkqe5FX> (private link, visible to the repo owner).
+Status: **approved on 2026-10-06**, implementation in progress.
 Original requirements: [`Ideas.txt`](../Ideas.txt).
+Mockup: [`mockup/index.html`](mockup/index.html) (open it in a browser), shown below.
+
+![UI mockup of the editor, the exact-time entry and the export menu](mockup/mockup.png)
 
 ## 1. What gets built
 
@@ -11,12 +13,12 @@ axis, transition points that can be dragged or typed exactly, a value per point
 and channel, and a choice per value between a hard step and a gradual ramp.
 Diagrams export to Excel, PDF and HTML.
 
-## 2. Platform (recommended: web browser)
+## 2. Platform: web browser (decided)
 
 A browser application written in TypeScript, delivered as **one self-contained
 HTML file**.
 
-| | Browser app (recommended) | C# desktop app (Avalonia) |
+| | Browser app (chosen) | C# desktop app (Avalonia) |
 |---|---|---|
 | Linux + Windows | Same file on both, nothing to compile or install | One build per system |
 | Start | Double-click the file, or open a link | Install or unpack, then run |

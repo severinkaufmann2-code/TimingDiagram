@@ -8,4 +8,9 @@ An editor for timing diagrams that runs in the web browser on Linux and Windows.
   (digital and analog signals in one diagram)
 - Export to Excel, PDF and HTML
 
-**Status:** planning. See the [plan](docs/PLAN.md).
+**Status:** in development. See the [plan](docs/PLAN.md).
+
+![UI mockup](docs/mockup/mockup.png)
+
+The picture is the mockup the editor is being built from
+([standalone page](docs/mockup/index.html)).

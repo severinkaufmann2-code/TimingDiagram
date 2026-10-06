@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timing Diagram Editor – UI mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;color:#14181f;font-family:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.45}
+button,input{font:inherit;color:inherit}
+.page{max-width:1408px;margin:0 auto;padding:28px 24px 48px}
+.page>h1{margin:0 0 4px;font-size:22px;font-weight:600}
+.page>p.lead{margin:0 0 28px;color:#4a5361;max-width:70ch}
+.view{margin:0 0 36px}
+.view>h2{margin:0 0 10px;font-size:13px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:#4a5361}
+.frame{border:1px solid #b4bac3;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(20,24,31,.08)}
+.frame.fixed{display:inline-block;vertical-align:top;max-width:100%;overflow-x:auto}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px;margin:14px 0 0}
+.note{margin:0;padding:12px 14px;background:#fff;border:1px solid #d0d4da;border-radius:8px}
+.note h3{margin:0 0 4px;font-size:13px;font-weight:600}
+.note p{margin:0;font-size:13px;color:#3a4350}
+.details{display:flex;flex-wrap:wrap;gap:32px 48px;align-items:flex-start}
+.details .view{margin:0}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>Timing Diagram Editor – UI mockup</h1>
+<p class="lead">A static picture of the planned editor, drawn before implementation. Nothing on this page is clickable; the notes say how each part will be operated.</p>
+
+<section class="view">
+<h2>Editor</h2>
+<div class="frame">
+<div style="display: flex; flex-direction: column; background: #f3f4f6; color: #14181f; font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; font-size: 13px; line-height: 1.35">
+
+<header style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 16px; background: #ffffff; border-bottom: 1px solid #d9dde3">
+<div style="display: flex; align-items: center; gap: 8px">
+<span aria-hidden="true" style="flex: none; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: #14181f; color: #ffffff">
+<svg width="16" height="16" viewBox="0 0 16 16" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H5 V5 H8.5 L11 11 H14"></path></svg>
+</span>
+<input type="text" aria-label="Diagram title" value="Cylinder A: extend and retract" style="width: 240px; height: 36px; padding: 0 8px; border: 1px solid #e3e6ea; border-radius: 6px; background: #ffffff; font-size: 14px; font-weight: 600">
+</div>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<div style="display: flex; align-items: center; gap: 2px">
+<button type="button" aria-label="Undo" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M6 4 L3 7 L6 10"></path><path d="M3 7 H10 A3.5 3.5 0 0 1 10 14 H7"></path></svg>
+</button>
+<button type="button" aria-label="Redo" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M10 4 L13 7 L10 10"></path><path d="M13 7 H6 A3.5 3.5 0 0 0 6 14 H9"></path></svg>
+</button>
+</div>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" style="height: 36px; padding: 0 12px 0 9px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 3 V13 M3 8 H13"></path></svg>
+Channel
+</button>
+<button type="button" style="height: 36px; padding: 0 12px 0 9px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 3 V13 M3 8 H13"></path></svg>
+Point
+</button>
+</div>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" aria-label="Time unit: seconds" style="height: 36px; padding: 0 8px 0 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; cursor: pointer">
+<span style="color: #5f6875">Unit</span>
+<span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500">s</span>
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: #5f6875; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M4 6 L8 10 L12 6"></path></svg>
+</button>
+<button type="button" aria-label="Snap to 0.1 seconds" style="height: 36px; padding: 0 8px 0 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; cursor: pointer">
+<span style="color: #5f6875">Snap</span>
+<span style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500">0.1 s</span>
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: #5f6875; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M4 6 L8 10 L12 6"></path></svg>
+</button>
+</div>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<div style="display: flex; align-items: center; gap: 2px">
+<button type="button" aria-label="Zoom out" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M3 8 H13"></path></svg>
+</button>
+<button type="button" aria-label="Fit the whole timeline" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M3 6 V3 H6 M10 3 H13 V6 M13 10 V13 H10 M6 13 H3 V10"></path></svg>
+</button>
+<button type="button" aria-label="Zoom in" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 3 V13 M3 8 H13"></path></svg>
+</button>
+</div>
+<span aria-hidden="true" style="flex: 1 1 0; min-width: 8px"></span>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" style="height: 36px; padding: 0 12px 0 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 12.5 V4 H6.5 L8 5.5 H14 V12.5 Z"></path></svg>
+Open
+</button>
+<button type="button" style="height: 36px; padding: 0 12px 0 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 2.5 V10.5 M5 7.5 L8 10.5 L11 7.5 M3 13.5 H13"></path></svg>
+Save
+</button>
+<button type="button" style="height: 36px; padding: 0 8px 0 12px; display: flex; align-items: center; gap: 6px; border: 1px solid #14181f; border-radius: 6px; background: #14181f; color: #ffffff; font-weight: 500; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 10 V2.5 M5 5.5 L8 2.5 L11 5.5 M3 9.5 V13.5 H13 V9.5"></path></svg>
+Export
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M4 6 L8 10 L12 6"></path></svg>
+</button>
+</div>
+</header>
+
+<main style="display: flex; flex-direction: column; gap: 16px; padding: 16px">
+
+<section aria-label="Timing diagram" style="display: flex; align-items: stretch; background: #ffffff; border: 1px solid #d9dde3; border-radius: 8px; overflow-x: auto">
+
+<div style="flex: none; width: 220px; border-right: 1px solid #d9dde3">
+<div style="height: 56px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding: 6px 10px 8px 12px; font-size: 11px; line-height: 14px; color: #5f6875">
+<span>Time (s)</span>
+<span>Transition points</span>
+</div>
+
+<div style="height: 60px; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 4px; border-top: 1px solid #c2c7cf">
+<button type="button" aria-label="Reorder channel Start button" style="flex: none; width: 16px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #8f97a3; cursor: grab">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><circle cx="6" cy="4" r="1.1"></circle><circle cx="10" cy="4" r="1.1"></circle><circle cx="6" cy="8" r="1.1"></circle><circle cx="10" cy="8" r="1.1"></circle><circle cx="6" cy="12" r="1.1"></circle><circle cx="10" cy="12" r="1.1"></circle></svg>
+</button>
+<span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #2a78d6"></span>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<input type="text" aria-label="Channel name" value="Start button" style="width: 100%; height: 26px; padding: 0 6px; border: 1px solid #e3e6ea; border-radius: 4px; background: #ffffff; font-weight: 500">
+<span style="padding-left: 7px; font-size: 11px; line-height: 14px; color: #5f6875">Digital · 0 / 1</span>
+</div>
+<button type="button" aria-label="Remove channel Start button" style="flex: none; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #5f6875; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5 13 H11 L11.5 4.5 M7 7 V10.5 M9 7 V10.5"></path></svg>
+</button>
+</div>
+
+<div style="height: 60px; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 4px; border-top: 1px solid #e3e6ea">
+<button type="button" aria-label="Reorder channel Valve Y1" style="flex: none; width: 16px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #8f97a3; cursor: grab">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><circle cx="6" cy="4" r="1.1"></circle><circle cx="10" cy="4" r="1.1"></circle><circle cx="6" cy="8" r="1.1"></circle><circle cx="10" cy="8" r="1.1"></circle><circle cx="6" cy="12" r="1.1"></circle><circle cx="10" cy="12" r="1.1"></circle></svg>
+</button>
+<span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #eb6834"></span>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<input type="text" aria-label="Channel name" value="Valve Y1" style="width: 100%; height: 26px; padding: 0 6px; border: 1px solid #e3e6ea; border-radius: 4px; background: #ffffff; font-weight: 500">
+<span style="padding-left: 7px; font-size: 11px; line-height: 14px; color: #5f6875">Digital · 0 / 1</span>
+</div>
+<button type="button" aria-label="Remove channel Valve Y1" style="flex: none; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #5f6875; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5 13 H11 L11.5 4.5 M7 7 V10.5 M9 7 V10.5"></path></svg>
+</button>
+</div>
+
+<div style="height: 100px; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 4px; border-top: 1px solid #e3e6ea; background: #f2f4f7">
+<button type="button" aria-label="Reorder channel Cylinder A" style="flex: none; width: 16px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #8f97a3; cursor: grab">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><circle cx="6" cy="4" r="1.1"></circle><circle cx="10" cy="4" r="1.1"></circle><circle cx="6" cy="8" r="1.1"></circle><circle cx="10" cy="8" r="1.1"></circle><circle cx="6" cy="12" r="1.1"></circle><circle cx="10" cy="12" r="1.1"></circle></svg>
+</button>
+<span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #1baf7a"></span>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<input type="text" aria-label="Channel name" value="Cylinder A" style="width: 100%; height: 26px; padding: 0 6px; border: 1px solid #c9ced6; border-radius: 4px; background: #ffffff; font-weight: 500">
+<span style="padding-left: 7px; font-size: 11px; line-height: 14px; color: #5f6875">Analog · 0 to 100 mm</span>
+</div>
+<button type="button" aria-label="Remove channel Cylinder A" style="flex: none; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #5f6875; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5 13 H11 L11.5 4.5 M7 7 V10.5 M9 7 V10.5"></path></svg>
+</button>
+</div>
+
+<div style="height: 60px; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 4px; border-top: 1px solid #e3e6ea">
+<button type="button" aria-label="Reorder channel Sensor B1" style="flex: none; width: 16px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #8f97a3; cursor: grab">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><circle cx="6" cy="4" r="1.1"></circle><circle cx="10" cy="4" r="1.1"></circle><circle cx="6" cy="8" r="1.1"></circle><circle cx="10" cy="8" r="1.1"></circle><circle cx="6" cy="12" r="1.1"></circle><circle cx="10" cy="12" r="1.1"></circle></svg>
+</button>
+<span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #eda100"></span>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<input type="text" aria-label="Channel name" value="Sensor B1" style="width: 100%; height: 26px; padding: 0 6px; border: 1px solid #e3e6ea; border-radius: 4px; background: #ffffff; font-weight: 500">
+<span style="padding-left: 7px; font-size: 11px; line-height: 14px; color: #5f6875">Digital · 0 / 1</span>
+</div>
+<button type="button" aria-label="Remove channel Sensor B1" style="flex: none; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #5f6875; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5 13 H11 L11.5 4.5 M7 7 V10.5 M9 7 V10.5"></path></svg>
+</button>
+</div>
+
+<div style="height: 100px; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 4px; border-top: 1px solid #e3e6ea">
+<button type="button" aria-label="Reorder channel Pressure" style="flex: none; width: 16px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; background: transparent; color: #8f97a3; cursor: grab">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: currentColor; stroke: none"><circle cx="6" cy="4" r="1.1"></circle><circle cx="10" cy="4" r="1.1"></circle><circle cx="6" cy="8" r="1.1"></circle><circle cx="10" cy="8" r="1.1"></circle><circle cx="6" cy="12" r="1.1"></circle><circle cx="10" cy="12" r="1.1"></circle></svg>
+</button>
+<span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #e87ba4"></span>
+<div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<input type="text" aria-label="Channel name" value="Pressure" style="width: 100%; height: 26px; padding: 0 6px; border: 1px solid #e3e6ea; border-radius: 4px; background: #ffffff; font-weight: 500">
+<span style="padding-left: 7px; font-size: 11px; line-height: 14px; color: #5f6875">Analog · 0 to 6 bar</span>
+</div>
+<button type="button" aria-label="Remove channel Pressure" style="flex: none; width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #5f6875; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5 13 H11 L11.5 4.5 M7 7 V10.5 M9 7 V10.5"></path></svg>
+</button>
+</div>
+
+<div style="height: 44px; display: flex; align-items: center; padding: 0 8px; border-top: 1px solid #e3e6ea">
+<button type="button" style="width: 100%; height: 30px; padding: 0 10px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 1px dashed #8f97a3; border-radius: 6px; background: transparent; font-weight: 500; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 3 V13 M3 8 H13"></path></svg>
+Add channel
+</button>
+</div>
+</div>
+
+<div style="position: relative; flex: none; width: 1100px">
+<svg width="1100" height="436" viewBox="0 0 1100 436" role="img" aria-label="Timing diagram with five channels on one time axis from 0 to 8 seconds and six transition points" style="display: block; font-family: 'IBM Plex Mono', ui-monospace, monospace">
+<rect x="0" y="27" width="1100" height="29" style="fill: #f7f8fa"></rect>
+<rect x="0" y="177" width="1100" height="99" style="fill: #f2f4f7"></rect>
+<path d="M50.5 57 V436 M175.5 57 V436 M300.5 57 V436 M425.5 57 V436 M550.5 57 V436 M675.5 57 V436 M800.5 57 V436 M925.5 57 V436 M1050.5 57 V436" style="fill: none; stroke: #eceef1; stroke-width: 1"></path>
+<path d="M0 26.5 H1100 M0 116.5 H1100 M0 176.5 H1100 M0 276.5 H1100 M0 336.5 H1100" style="fill: none; stroke: #e3e6ea; stroke-width: 1"></path>
+<path d="M0 56.5 H1100" style="fill: none; stroke: #c2c7cf; stroke-width: 1"></path>
+<path d="M50.5 20 V26 M175.5 20 V26 M300.5 20 V26 M425.5 20 V26 M550.5 20 V26 M675.5 20 V26 M800.5 20 V26 M925.5 20 V26 M1050.5 20 V26 M112.5 23 V26 M237.5 23 V26 M362.5 23 V26 M487.5 23 V26 M612.5 23 V26 M737.5 23 V26 M862.5 23 V26 M987.5 23 V26" style="fill: none; stroke: #8f97a3; stroke-width: 1"></path>
+<text x="50.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">0</text>
+<text x="175.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">1</text>
+<text x="300.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">2</text>
+<text x="425.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">3</text>
+<text x="550.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">4</text>
+<text x="675.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">5</text>
+<text x="800.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">6</text>
+<text x="925.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">7</text>
+<text x="1050.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">8</text>
+
+<path d="M112.5 52 V436 M175.5 52 V436 M550.5 52 V436 M675.5 52 V436 M862.5 52 V436" style="fill: none; stroke: #aab1bb; stroke-width: 1"></path>
+<path d="M425.5 52 V436" style="fill: none; stroke: #14181f; stroke-width: 1"></path>
+
+<text x="40" y="75.5" style="text-anchor: end; font-size: 10px; fill: #667080">1</text>
+<text x="40" y="103.5" style="text-anchor: end; font-size: 10px; fill: #667080">0</text>
+<text x="40" y="135.5" style="text-anchor: end; font-size: 10px; fill: #667080">1</text>
+<text x="40" y="163.5" style="text-anchor: end; font-size: 10px; fill: #667080">0</text>
+<text x="40" y="197.5" style="text-anchor: end; font-size: 10px; fill: #667080">100</text>
+<text x="40" y="261.5" style="text-anchor: end; font-size: 10px; fill: #667080">0</text>
+<text x="40" y="295.5" style="text-anchor: end; font-size: 10px; fill: #667080">1</text>
+<text x="40" y="323.5" style="text-anchor: end; font-size: 10px; fill: #667080">0</text>
+<text x="40" y="357.5" style="text-anchor: end; font-size: 10px; fill: #667080">6</text>
+<text x="40" y="421.5" style="text-anchor: end; font-size: 10px; fill: #667080">0</text>
+
+<rect x="112.5" y="72" width="62.5" height="28" style="fill: #2a78d6; opacity: 0.12"></rect>
+<rect x="175" y="132" width="500" height="28" style="fill: #eb6834; opacity: 0.12"></rect>
+<polygon points="175,258 425,194 675,194 862.5,258" style="fill: #1baf7a; opacity: 0.14"></polygon>
+<rect x="425" y="292" width="250" height="28" style="fill: #eda100; opacity: 0.14"></rect>
+<polygon points="425,418 550,354 675,354 675,418" style="fill: #e87ba4; opacity: 0.14"></polygon>
+
+<path d="M50 100 H112.5 V72 H175 V100 H1050" style="fill: none; stroke: #2a78d6; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+<path d="M50 160 H175 V132 H675 V160 H1050" style="fill: none; stroke: #eb6834; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+<path d="M50 258 H175 L425 194 H675 L862.5 258 H1050" style="fill: none; stroke: #1baf7a; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+<path d="M50 320 H425 V292 H675 V320 H1050" style="fill: none; stroke: #eda100; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+<path d="M50 418 H425 L550 354 H675 V418 H1050" style="fill: none; stroke: #e87ba4; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+
+<circle cx="50" cy="100" r="4" style="fill: #ffffff; stroke: #2a78d6; stroke-width: 2"></circle>
+<circle cx="50" cy="160" r="4" style="fill: #ffffff; stroke: #eb6834; stroke-width: 2"></circle>
+<circle cx="50" cy="258" r="4" style="fill: #ffffff; stroke: #1baf7a; stroke-width: 2"></circle>
+<circle cx="50" cy="320" r="4" style="fill: #ffffff; stroke: #eda100; stroke-width: 2"></circle>
+<circle cx="50" cy="418" r="4" style="fill: #ffffff; stroke: #e87ba4; stroke-width: 2"></circle>
+
+<circle cx="112.5" cy="72" r="5" style="fill: #2a78d6; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="175" cy="100" r="5" style="fill: #2a78d6; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="175" cy="132" r="5" style="fill: #eb6834; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="675" cy="160" r="5" style="fill: #eb6834; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="862.5" cy="258" r="5" style="fill: #1baf7a; stroke: #f2f4f7; stroke-width: 2"></circle>
+<circle cx="425" cy="292" r="5" style="fill: #eda100; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="675" cy="320" r="5" style="fill: #eda100; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="550" cy="354" r="5" style="fill: #e87ba4; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="675" cy="418" r="5" style="fill: #e87ba4; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="425" cy="194" r="9" style="fill: #ffffff; stroke: #14181f; stroke-width: 1.5"></circle>
+<circle cx="425" cy="194" r="4.5" style="fill: #1baf7a"></circle>
+
+<rect x="92.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="112.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">0.5</text>
+<rect x="155.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="175.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">1.0</text>
+<rect x="405.5" y="32.5" width="40" height="19" rx="4" style="fill: #14181f; stroke: #14181f; stroke-width: 1"></rect>
+<text x="425.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #ffffff">3.0</text>
+<rect x="530.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="550.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">4.0</text>
+<rect x="655.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="675.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">5.0</text>
+<rect x="842.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="862.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">6.5</text>
+</svg>
+<div style="height: 44px; border-top: 1px solid #e3e6ea"></div>
+
+<div style="position: absolute; left: 425px; top: 138px; transform: translateX(-50%); height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 6px 0 10px; background: #ffffff; border: 1px solid #8f97a3; border-radius: 8px; box-shadow: 0 6px 18px rgba(20, 24, 31, 0.18); white-space: nowrap">
+<label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5f6875">
+Value
+<input type="text" value="100" style="width: 62px; height: 28px; padding: 0 6px; border: 1.5px solid #14181f; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; color: #14181f; text-align: right">
+</label>
+<span style="font-size: 12px; color: #5f6875">mm</span>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<div style="display: flex; gap: 2px; padding: 2px; border-radius: 6px; background: #eceef1">
+<button type="button" aria-pressed="false" style="height: 24px; padding: 0 8px 0 6px; display: flex; align-items: center; gap: 5px; border: 0; border-radius: 4px; background: transparent; font-size: 12px; color: #3a4350; cursor: pointer">
+<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>
+Step
+</button>
+<button type="button" aria-pressed="true" style="height: 24px; padding: 0 8px 0 6px; display: flex; align-items: center; gap: 5px; border: 0; border-radius: 4px; background: #14181f; font-size: 12px; font-weight: 500; color: #ffffff; cursor: pointer">
+<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 L12 3"></path></svg>
+Ramp
+</button>
+</div>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<button type="button" aria-label="Clear this value, so the channel does not change at this point" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 5px; background: transparent; color: #5f6875; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M4 4 L12 12 M12 4 L4 12"></path></svg>
+</button>
+<span aria-hidden="true" style="position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px; background: #ffffff; border-right: 1px solid #8f97a3; border-bottom: 1px solid #8f97a3; transform: rotate(45deg)"></span>
+</div>
+</div>
+
+</section>
+
+<section aria-label="Values" style="background: #ffffff; border: 1px solid #d9dde3; border-radius: 8px; overflow: hidden">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; padding: 12px 14px 10px 14px">
+<h2 style="margin: 0; font-size: 13px; font-weight: 600">Values</h2>
+<span style="font-size: 12px; color: #5f6875">One column per transition point. An empty cell keeps the previous value.</span>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 980px; border-collapse: collapse; table-layout: fixed; font-size: 13px">
+<thead>
+<tr>
+<th scope="col" style="width: 220px; height: 42px; padding: 0 12px; text-align: left; font-size: 11px; font-weight: 500; color: #5f6875; background: #f7f8fa; border-top: 1px solid #e3e6ea">Channel</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-size: 11px; font-weight: 500; color: #5f6875; background: #f7f8fa; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1">Initial value</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-weight: 400; background: #f7f8fa; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1">
+<div style="display: flex; align-items: center; gap: 6px"><input type="text" aria-label="Time of point 1 in seconds" value="0.5" style="width: 64px; height: 26px; padding: 0 6px; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; text-align: right"><span style="font-size: 11px; color: #5f6875">s</span></div>
+</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-weight: 400; background: #f7f8fa; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1">
+<div style="display: flex; align-items: center; gap: 6px"><input type="text" aria-label="Time of point 2 in seconds" value="1.0" style="width: 64px; height: 26px; padding: 0 6px; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; text-align: right"><span style="font-size: 11px; color: #5f6875">s</span></div>
+</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-weight: 400; background: #eceef1; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; box-shadow: inset 0 -2px 0 #14181f">
+<div style="display: flex; align-items: center; gap: 6px"><input type="text" aria-label="Time of point 3 in seconds" value="3.0" style="width: 64px; height: 26px; padding: 0 6px; border: 1px solid #14181f; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500; text-align: right"><span style="font-size: 11px; color: #5f6875">s</span></div>
+</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-weight: 400; background: #f7f8fa; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1">
+<div style="display: flex; align-items: center; gap: 6px"><input type="text" aria-label="Time of point 4 in seconds" value="4.0" style="width: 64px; height: 26px; padding: 0 6px; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; text-align: right"><span style="font-size: 11px; color: #5f6875">s</span></div>
+</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-weight: 400; background: #f7f8fa; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1">
+<div style="display: flex; align-items: center; gap: 6px"><input type="text" aria-label="Time of point 5 in seconds" value="5.0" style="width: 64px; height: 26px; padding: 0 6px; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; text-align: right"><span style="font-size: 11px; color: #5f6875">s</span></div>
+</th>
+<th scope="col" style="padding: 0 10px; text-align: left; font-weight: 400; background: #f7f8fa; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1">
+<div style="display: flex; align-items: center; gap: 6px"><input type="text" aria-label="Time of point 6 in seconds" value="6.5" style="width: 64px; height: 26px; padding: 0 6px; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; text-align: right"><span style="font-size: 11px; color: #5f6875">s</span></div>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row" style="height: 38px; padding: 0 12px; text-align: left; font-weight: 500; border-top: 1px solid #e3e6ea"><div style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #2a78d6"></span>Start button</div></th>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; font-family: 'IBM Plex Mono', ui-monospace, monospace">0</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>1</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>0</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f7f8fa; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+</tr>
+<tr>
+<th scope="row" style="height: 38px; padding: 0 12px; text-align: left; font-weight: 500; border-top: 1px solid #e3e6ea"><div style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #eb6834"></span>Valve Y1</div></th>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; font-family: 'IBM Plex Mono', ui-monospace, monospace">0</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>1</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f7f8fa; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>0</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+</tr>
+<tr>
+<th scope="row" style="height: 38px; padding: 0 12px; text-align: left; font-weight: 500; border-top: 1px solid #e3e6ea; background: #f2f4f7"><div style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #1baf7a"></span>Cylinder A<span style="font-size: 11px; font-weight: 400; color: #5f6875">mm</span></div></th>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f2f4f7; font-family: 'IBM Plex Mono', ui-monospace, monospace">0</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f2f4f7; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f2f4f7; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #ffffff; box-shadow: inset 0 0 0 2px #14181f"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 500"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Ramp" style="flex: none; fill: none; stroke: #14181f; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 L12 3"></path></svg>100</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f2f4f7; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f2f4f7; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f2f4f7"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Ramp" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 L12 3"></path></svg>0</div></td>
+</tr>
+<tr>
+<th scope="row" style="height: 38px; padding: 0 12px; text-align: left; font-weight: 500; border-top: 1px solid #e3e6ea"><div style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #eda100"></span>Sensor B1</div></th>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; font-family: 'IBM Plex Mono', ui-monospace, monospace">0</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f7f8fa"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>1</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>0</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+</tr>
+<tr>
+<th scope="row" style="height: 38px; padding: 0 12px; text-align: left; font-weight: 500; border-top: 1px solid #e3e6ea"><div style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #e87ba4"></span>Pressure<span style="font-size: 11px; font-weight: 400; color: #5f6875">bar</span></div></th>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; font-family: 'IBM Plex Mono', ui-monospace, monospace">0</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; background: #f7f8fa; color: #667080">–</td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Ramp" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 L12 3"></path></svg>6</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1"><div style="display: flex; align-items: center; gap: 6px; font-family: 'IBM Plex Mono', ui-monospace, monospace"><svg width="14" height="14" viewBox="0 0 14 14" role="img" aria-label="Step" style="flex: none; fill: none; stroke: #3a4350; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M2 11 H7 V3 H12"></path></svg>0</div></td>
+<td style="padding: 0 10px; border-top: 1px solid #e3e6ea; border-left: 1px solid #eceef1; color: #667080">–</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+</main>
+
+<footer style="margin-top: auto; display: flex; flex-wrap: wrap; gap: 4px 24px; padding: 8px 16px; background: #ffffff; border-top: 1px solid #d9dde3; font-size: 12px; color: #5f6875">
+<span>Click the marker lane to add a transition point</span>
+<span>Drag a marker to move it, click it to type an exact time</span>
+<span>Drag a dot to change a value, click it to type one and choose Step or Ramp</span>
+</footer>
+
+</div>
+</div>
+<div class="notes">
+<div class="note"><h3>Channels</h3><p>“Add channel” puts a new lane at the bottom. Click a name to rename it. The bin removes the lane and Undo brings it back. Drag the grip to reorder.</p></div>
+<div class="note"><h3>Transition points</h3><p>Click the marker lane of the ruler to add one. Drag a marker sideways and every channel follows. Click a marker to type the exact time.</p></div>
+<div class="note"><h3>Values</h3><p>Where a point crosses a channel you can set a value: drag the dot up or down, or click it and type. Step holds the previous value, then jumps. Ramp rises or falls gradually from the previous point.</p></div>
+<div class="note"><h3>Export</h3><p>Excel (.xlsx), PDF and a standalone web page (.html) from the Export menu. Save keeps an editable project file.</p></div>
+</div>
+</section>
+
+<div class="details">
+<section class="view">
+<h2>Transition point: exact time</h2>
+<div class="frame fixed">
+<div style="position: relative; width: 520px; height: 276px; overflow: hidden; background: #ffffff; color: #14181f; font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; font-size: 13px; line-height: 1.35">
+<svg width="520" height="276" viewBox="0 0 520 276" role="img" aria-label="Part of the timeline between 2 and 5 seconds with the transition point at 3 seconds selected" style="display: block; font-family: 'IBM Plex Mono', ui-monospace, monospace">
+<rect x="0" y="27" width="520" height="29" style="fill: #f7f8fa"></rect>
+<path d="M40.5 57 V276 M180.5 57 V276 M320.5 57 V276 M460.5 57 V276" style="fill: none; stroke: #eceef1; stroke-width: 1"></path>
+<path d="M0 26.5 H520 M0 116.5 H520 M0 176.5 H520" style="fill: none; stroke: #e3e6ea; stroke-width: 1"></path>
+<path d="M0 56.5 H520" style="fill: none; stroke: #c2c7cf; stroke-width: 1"></path>
+<path d="M40.5 20 V26 M180.5 20 V26 M320.5 20 V26 M460.5 20 V26 M110.5 23 V26 M250.5 23 V26 M390.5 23 V26" style="fill: none; stroke: #8f97a3; stroke-width: 1"></path>
+<text x="40.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">2</text>
+<text x="180.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">3</text>
+<text x="320.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">4</text>
+<text x="460.5" y="14" style="text-anchor: middle; font-size: 10px; fill: #667080">5</text>
+
+<path d="M320.5 52 V276 M460.5 52 V276" style="fill: none; stroke: #aab1bb; stroke-width: 1"></path>
+<path d="M180.5 52 V276" style="fill: none; stroke: #14181f; stroke-width: 1"></path>
+
+<rect x="0" y="132" width="460" height="28" style="fill: #eb6834; opacity: 0.12"></rect>
+<polygon points="0,235.1 180,194 460,194 520,212.3 520,258 0,258" style="fill: #1baf7a; opacity: 0.14"></polygon>
+
+<path d="M0 100 H520" style="fill: none; stroke: #2a78d6; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+<path d="M0 132 H460 V160 H520" style="fill: none; stroke: #eb6834; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+<path d="M0 235.1 L180 194 H460 L520 212.3" style="fill: none; stroke: #1baf7a; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round"></path>
+
+<circle cx="460" cy="160" r="5" style="fill: #eb6834; stroke: #ffffff; stroke-width: 2"></circle>
+<circle cx="180" cy="194" r="5" style="fill: #1baf7a; stroke: #ffffff; stroke-width: 2"></circle>
+
+<rect x="160.5" y="32.5" width="40" height="19" rx="4" style="fill: #14181f; stroke: #14181f; stroke-width: 1"></rect>
+<text x="180.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #ffffff">3.0</text>
+<rect x="300.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="320.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">4.0</text>
+<rect x="440.5" y="32.5" width="40" height="19" rx="4" style="fill: #ffffff; stroke: #8f97a3; stroke-width: 1"></rect>
+<text x="460.5" y="46" style="text-anchor: middle; font-size: 11px; font-weight: 500; fill: #14181f">5.0</text>
+</svg>
+
+<div style="position: absolute; left: 180px; top: 60px; transform: translateX(-50%); height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 4px 0 10px; background: #ffffff; border: 1px solid #8f97a3; border-radius: 8px; box-shadow: 0 6px 18px rgba(20, 24, 31, 0.18); white-space: nowrap">
+<span aria-hidden="true" style="position: absolute; left: 50%; top: -6px; width: 10px; height: 10px; margin-left: -5px; background: #ffffff; border-left: 1px solid #8f97a3; border-top: 1px solid #8f97a3; transform: rotate(45deg)"></span>
+<label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5f6875">
+Time
+<input type="text" value="3.000" style="width: 76px; height: 26px; padding: 0 6px; border: 1.5px solid #14181f; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 13px; color: #14181f; text-align: right">
+</label>
+<span style="font-size: 12px; color: #5f6875">s</span>
+<span aria-hidden="true" style="width: 1px; height: 20px; background: #d9dde3"></span>
+<button type="button" style="height: 28px; padding: 0 8px 0 6px; display: flex; align-items: center; gap: 5px; border: 0; border-radius: 5px; background: transparent; font-size: 12px; color: #3a4350; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round"><path d="M3 4.5 H13 M6.5 4.5 V3 H9.5 V4.5 M4.5 4.5 L5 13 H11 L11.5 4.5 M7 7 V10.5 M9 7 V10.5"></path></svg>
+Delete
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="view">
+<h2>Export menu</h2>
+<div class="frame fixed">
+<div style="position: relative; width: 380px; height: 336px; overflow: hidden; background: #f3f4f6; color: #14181f; font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif; font-size: 13px; line-height: 1.35">
+
+<div style="height: 56px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 16px; background: #ffffff; border-bottom: 1px solid #d9dde3">
+<button type="button" style="height: 36px; padding: 0 12px 0 10px; display: flex; align-items: center; gap: 6px; border: 1px solid #c9ced6; border-radius: 6px; background: #ffffff; font-weight: 500; cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 2.5 V10.5 M5 7.5 L8 10.5 L11 7.5 M3 13.5 H13"></path></svg>
+Save
+</button>
+<button type="button" aria-expanded="true" style="height: 36px; padding: 0 8px 0 12px; display: flex; align-items: center; gap: 6px; border: 1px solid #14181f; border-radius: 6px; background: #14181f; color: #ffffff; font-weight: 500; box-shadow: 0 0 0 3px rgba(20, 24, 31, 0.18); cursor: pointer">
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M8 10 V2.5 M5 5.5 L8 2.5 L11 5.5 M3 9.5 V13.5 H13 V9.5"></path></svg>
+Export
+<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" style="fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round"><path d="M4 10 L8 6 L12 10"></path></svg>
+</button>
+</div>
+
+<div style="position: absolute; right: 16px; top: 52px; width: 316px; display: flex; flex-direction: column; padding: 6px; background: #ffffff; border: 1px solid #c9ced6; border-radius: 8px; box-shadow: 0 10px 28px rgba(20, 24, 31, 0.18)">
+
+<button type="button" style="height: 56px; padding: 0 10px 0 8px; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 6px; background: #f2f4f7; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="flex: none; width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; color: #3a4350">XLSX</span>
+<span style="display: flex; flex-direction: column; gap: 1px">
+<span style="font-weight: 500">Excel workbook</span>
+<span style="font-size: 12px; color: #5f6875">Values table and a picture of the diagram</span>
+</span>
+</button>
+
+<button type="button" style="height: 56px; padding: 0 10px 0 8px; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 6px; background: transparent; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="flex: none; width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; color: #3a4350">PDF</span>
+<span style="display: flex; flex-direction: column; gap: 1px">
+<span style="font-weight: 500">PDF document</span>
+<span style="font-size: 12px; color: #5f6875">Sharp at any zoom, ready to print</span>
+</span>
+</button>
+
+<button type="button" style="height: 56px; padding: 0 10px 0 8px; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 6px; background: transparent; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="flex: none; width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; color: #3a4350">HTML</span>
+<span style="display: flex; flex-direction: column; gap: 1px">
+<span style="font-weight: 500">Web page</span>
+<span style="font-size: 12px; color: #5f6875">One file that opens in any browser</span>
+</span>
+</button>
+
+<span aria-hidden="true" style="height: 1px; margin: 6px 4px; background: #e3e6ea"></span>
+
+<button type="button" style="height: 56px; padding: 0 10px 0 8px; display: flex; align-items: center; gap: 12px; border: 0; border-radius: 6px; background: transparent; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="flex: none; width: 40px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid #c9ced6; border-radius: 5px; background: #ffffff; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; font-weight: 600; color: #3a4350">PNG</span>
+<span style="display: flex; flex-direction: column; gap: 1px">
+<span style="font-weight: 500">Picture</span>
+<span style="font-size: 12px; color: #5f6875">PNG or SVG for documents and slides</span>
+</span>
+</button>
+
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</body>
+</html>
