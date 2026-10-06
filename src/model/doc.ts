@@ -247,7 +247,9 @@ export function updateChannel(doc: Doc, channelId: string, patch: ChannelPatch):
     else next.min = channel.min;
     if (patch.max !== undefined && Number.isFinite(patch.max)) next.max = clean(patch.max);
     else next.max = channel.max;
-    return normalizeChannel(next);
+    const normalized = normalizeChannel(next);
+    // a patch that changes nothing must not count as an edit
+    return JSON.stringify(normalized) === JSON.stringify(channel) ? channel : normalized;
   });
 }
 

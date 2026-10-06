@@ -64,6 +64,48 @@ export const ChevronUpIcon = () => (
     <path d="M4 10L8 6L12 10" />
   </Icon>
 );
+export const ChevronRightIcon = () => (
+  <Icon>
+    <path d="M6 4L10 8L6 12" />
+  </Icon>
+);
+export const MoreIcon = () => (
+  <Icon filled>
+    <circle cx="3.5" cy="8" r="1.25" />
+    <circle cx="8" cy="8" r="1.25" />
+    <circle cx="12.5" cy="8" r="1.25" />
+  </Icon>
+);
+export const CommentIcon = () => (
+  <Icon>
+    <path d="M2.5 3H13.5V10.5H8.5L5.5 13.5V10.5H2.5Z" />
+  </Icon>
+);
+export const GroupIcon = () => (
+  <Icon>
+    <path d="M2.5 3H13.5V13H2.5ZM2.5 6.5H13.5" />
+  </Icon>
+);
+export const PhaseIcon = () => (
+  <Icon>
+    <path d="M2.5 5V11M13.5 5V11M2.5 8H13.5" />
+  </Icon>
+);
+export const PointIcon = () => (
+  <Icon>
+    <path d="M5 2.5H11V6H5ZM8 6V13.5" />
+  </Icon>
+);
+export const CopyIcon = () => (
+  <Icon>
+    <path d="M5.5 5.5H13V13H5.5ZM3 10.5V3H10.5" />
+  </Icon>
+);
+export const RowsIcon = () => (
+  <Icon>
+    <path d="M3 4.5H13M3 8H13M3 11.5H13" />
+  </Icon>
+);
 export const FolderIcon = () => (
   <Icon>
     <path d="M2 12.5V4H6.5L8 5.5H14V12.5Z" />

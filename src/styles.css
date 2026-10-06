@@ -847,7 +847,10 @@ kbd {
   text-transform: uppercase;
   color: var(--muted);
 }
-.help-example {
+.help-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-bottom: 4px;
 }
 .help ul {
@@ -1100,4 +1103,89 @@ kbd {
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* ───────────── groups ───────────── */
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 4px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--line-strong);
+}
+.group:first-child {
+  border-top-color: transparent;
+}
+.group-toggle,
+.values-fold {
+  flex: none;
+  width: 22px;
+  height: 26px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.group-toggle:hover,
+.values-fold:hover {
+  background: var(--band);
+  color: var(--ink);
+}
+.group-title {
+  flex: 1 1 0;
+  height: 26px;
+  font-weight: 600;
+}
+.group-count {
+  flex: none;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: var(--segment);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.group .icon-button {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+}
+.channel-sub {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.channel-sub .channel-kind {
+  align-self: auto;
+  min-width: 0;
+}
+.channel-add {
+  gap: 8px;
+}
+.values-table tr.values-group th,
+.values-table tr.values-group td {
+  height: 32px;
+  background: var(--surface-2);
+  border-left: 0;
+}
+.values-table tr.values-group .values-channel {
+  font-weight: 600;
+}
+.values-table tr.values-group .values-name {
+  gap: 4px;
+  margin-left: -6px;
 }

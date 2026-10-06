@@ -3,20 +3,21 @@
  * transition point. It edits the same data as the drawing above it.
  */
 
-import { useRef, type KeyboardEvent } from 'react';
+import { Fragment, useRef, type KeyboardEvent } from 'react';
 import { clearValue, removePoint, setMode, setPointTime, setValue } from '../model/doc';
 import { decimalsOf } from '../model/numbers';
-import { INITIAL, type Column } from '../model/types';
+import { INITIAL, type Channel, type Column } from '../model/types';
 import { DARK, LIGHT, channelColor } from '../render/theme';
 import { useStore } from '../state/store';
 import { addPointAtEnd } from './actions';
 import { NumberField } from './fields';
-import { ChevronDownIcon, ChevronUpIcon, CloseIcon, PlusIcon, RampIcon, StepIcon } from './icons';
+import { ChevronDownIcon, ChevronRightIcon, ChevronUpIcon, CloseIcon, PlusIcon, RampIcon, StepIcon } from './icons';
 
 export function ValuesTable() {
   const doc = useStore((state) => state.doc);
   const selection = useStore((state) => state.selection);
   const open = useStore((state) => state.tableOpen);
+  const folded = useStore((state) => state.folded);
   const themeName = useStore((state) => state.theme);
   const change = useStore((state) => state.change);
   const theme = themeName === 'dark' ? DARK : LIGHT;
@@ -44,6 +45,81 @@ export function ValuesTable() {
     if (event.key === 'ArrowDown') return focusCell(row + 1, col);
     return false;
   };
+
+  const channelRow = (channel: Channel, row: number) => (
+    <tr key={channel.id} data-selected={(selection.kind === 'cell' && selection.channelId === channel.id) || undefined}>
+      <th scope="row" className="values-channel">
+        <span className="values-name">
+          <span className="values-swatch" style={{ background: channelColor(theme, channel.color) }} aria-hidden="true" />
+          <span className="values-name-text">{channel.name}</span>
+          {channel.kind === 'analog' && channel.unit && <span className="values-unit">{channel.unit}</span>}
+        </span>
+      </th>
+      <td className="values-initial" data-selected={isSelectedCell(channel.id, INITIAL) || undefined}>
+        <div className="values-cell">
+          <NumberField
+            className="field field-number"
+            ariaLabel={`Initial value of ${channel.name}`}
+            value={channel.initial}
+            data={{ row, col: 0 }}
+            onFocus={() => useStore.getState().select({ kind: 'cell', channelId: channel.id, column: INITIAL })}
+            onCommit={(value) => change((d) => setValue(d, channel.id, INITIAL, value))}
+            onInvalid={notANumber}
+            onEnter={() => focusCell(row + 1, 0)}
+            onKey={(event) => walk(event, row, 0)}
+          />
+        </div>
+      </td>
+      {doc.points.map((point, index) => {
+        const cell = channel.cells[point.id];
+        const col = index + 1;
+        return (
+          <td key={point.id} data-selected={isSelectedCell(channel.id, point.id) || undefined} data-column={point.id === selectedPointId || undefined}>
+            <div className="values-cell">
+              <button
+                type="button"
+                className="mode-toggle"
+                style={{ visibility: cell ? 'visible' : 'hidden' }}
+                aria-label={cell?.mode === 'ramp' ? 'Ramp. Switch to step' : 'Step. Switch to ramp'}
+                title={
+                  cell?.mode === 'ramp'
+                    ? 'Ramp: changes gradually from the previous point. Click for step.'
+                    : 'Step: keeps the previous value, then jumps. Click for ramp.'
+                }
+                tabIndex={-1}
+                onClick={() => change((d) => setMode(d, channel.id, point.id, cell?.mode === 'ramp' ? 'step' : 'ramp'))}
+              >
+                {cell?.mode === 'ramp' ? <RampIcon /> : <StepIcon />}
+              </button>
+              <NumberField
+                className="field field-number"
+                ariaLabel={`${channel.name} at transition point ${col}`}
+                value={cell?.value ?? null}
+                placeholder="–"
+                data={{ row, col }}
+                onFocus={() => useStore.getState().select({ kind: 'cell', channelId: channel.id, column: point.id })}
+                onCommit={(value) => change((d) => setValue(d, channel.id, point.id, value))}
+                onClear={() => change((d) => clearValue(d, channel.id, point.id))}
+                onInvalid={notANumber}
+                onEnter={() => focusCell(row + 1, col)}
+                onKey={(event) => {
+                  const key = event.key.toLowerCase();
+                  if ((key === 's' || key === 'r') && !event.ctrlKey && !event.metaKey) {
+                    change((d) => setMode(d, channel.id, point.id, key === 's' ? 'step' : 'ramp'));
+                    return true;
+                  }
+                  return walk(event, row, col);
+                }}
+              />
+            </div>
+          </td>
+        );
+      })}
+      <td className="values-add" />
+    </tr>
+  );
+
+  let shownRows = 0;
 
   return (
     <section className="values" aria-label="Values">
@@ -112,78 +188,38 @@ export function ValuesTable() {
               </tr>
             </thead>
             <tbody>
-              {doc.channels.map((channel, row) => (
-                <tr key={channel.id} data-selected={(selection.kind === 'cell' && selection.channelId === channel.id) || undefined}>
-                  <th scope="row" className="values-channel">
-                    <span className="values-name">
-                      <span className="values-swatch" style={{ background: channelColor(theme, channel.color) }} aria-hidden="true" />
-                      <span className="values-name-text">{channel.name}</span>
-                      {channel.kind === 'analog' && channel.unit && <span className="values-unit">{channel.unit}</span>}
-                    </span>
-                  </th>
-                  <td className="values-initial" data-selected={isSelectedCell(channel.id, INITIAL) || undefined}>
-                    <div className="values-cell">
-                      <NumberField
-                        className="field field-number"
-                        ariaLabel={`Initial value of ${channel.name}`}
-                        value={channel.initial}
-                        data={{ row, col: 0 }}
-                        onFocus={() => useStore.getState().select({ kind: 'cell', channelId: channel.id, column: INITIAL })}
-                        onCommit={(value) => change((d) => setValue(d, channel.id, INITIAL, value))}
-                        onInvalid={notANumber}
-                        onEnter={() => focusCell(row + 1, 0)}
-                        onKey={(event) => walk(event, row, 0)}
-                      />
-                    </div>
-                  </td>
-                  {doc.points.map((point, index) => {
-                    const cell = channel.cells[point.id];
-                    const col = index + 1;
+              {doc.groups.length === 0
+                ? doc.channels.map(channelRow)
+                : doc.groups.map((group) => {
+                    const isFolded = folded.includes(group.id);
+                    const channels = doc.channels.filter((channel) => channel.group === group.id);
+                    // the rows of the table are counted without the folded ones, for the arrow keys
+                    const firstRow = shownRows;
+                    if (!isFolded) shownRows += channels.length;
                     return (
-                      <td key={point.id} data-selected={isSelectedCell(channel.id, point.id) || undefined} data-column={point.id === selectedPointId || undefined}>
-                        <div className="values-cell">
-                          <button
-                            type="button"
-                            className="mode-toggle"
-                            style={{ visibility: cell ? 'visible' : 'hidden' }}
-                            aria-label={cell?.mode === 'ramp' ? 'Ramp. Switch to step' : 'Step. Switch to ramp'}
-                            title={
-                              cell?.mode === 'ramp'
-                                ? 'Ramp: changes gradually from the previous point. Click for step.'
-                                : 'Step: keeps the previous value, then jumps. Click for ramp.'
-                            }
-                            tabIndex={-1}
-                            onClick={() => change((d) => setMode(d, channel.id, point.id, cell?.mode === 'ramp' ? 'step' : 'ramp'))}
-                          >
-                            {cell?.mode === 'ramp' ? <RampIcon /> : <StepIcon />}
-                          </button>
-                          <NumberField
-                            className="field field-number"
-                            ariaLabel={`${channel.name} at transition point ${col}`}
-                            value={cell?.value ?? null}
-                            placeholder="–"
-                            data={{ row, col }}
-                            onFocus={() => useStore.getState().select({ kind: 'cell', channelId: channel.id, column: point.id })}
-                            onCommit={(value) => change((d) => setValue(d, channel.id, point.id, value))}
-                            onClear={() => change((d) => clearValue(d, channel.id, point.id))}
-                            onInvalid={notANumber}
-                            onEnter={() => focusCell(row + 1, col)}
-                            onKey={(event) => {
-                              const key = event.key.toLowerCase();
-                              if ((key === 's' || key === 'r') && !event.ctrlKey && !event.metaKey) {
-                                change((d) => setMode(d, channel.id, point.id, key === 's' ? 'step' : 'ramp'));
-                                return true;
-                              }
-                              return walk(event, row, col);
-                            }}
-                          />
-                        </div>
-                      </td>
+                      <Fragment key={group.id}>
+                        <tr className="values-group" data-group={group.id}>
+                          <th scope="rowgroup" className="values-channel">
+                            <span className="values-name">
+                              <button
+                                type="button"
+                                className="values-fold"
+                                aria-expanded={!isFolded}
+                                aria-label={isFolded ? `Unfold group ${group.title}` : `Fold group ${group.title} away`}
+                                onClick={() => useStore.getState().setFolded(group.id, !isFolded)}
+                              >
+                                {isFolded ? <ChevronRightIcon /> : <ChevronDownIcon />}
+                              </button>
+                              <span className="values-name-text">{group.title}</span>
+                              {isFolded && <span className="group-count">{channels.length}</span>}
+                            </span>
+                          </th>
+                          <td colSpan={doc.points.length + 2} />
+                        </tr>
+                        {!isFolded && channels.map((channel, index) => channelRow(channel, firstRow + index))}
+                      </Fragment>
                     );
                   })}
-                  <td className="values-add" />
-                </tr>
-              ))}
             </tbody>
           </table>
         </div>

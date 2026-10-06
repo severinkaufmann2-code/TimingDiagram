@@ -3,7 +3,7 @@
 import { setTimeAxis, setTitle } from '../model/doc';
 import { formatNumber, niceStep } from '../model/numbers';
 import { useStore, type PdfPage } from '../state/store';
-import { addPointAtEnd, loadExample, newDiagram, openProject, runExport, saveCurrentProject, zoomBy } from './actions';
+import { addGroupNow, addPointAtEnd, loadExample, newDiagram, openProject, runExport, saveCurrentProject, zoomBy } from './actions';
 import { AddChannelItems } from './ChannelHeader';
 import { Segmented } from './editors';
 import { NumberField, TextField } from './fields';
@@ -13,11 +13,13 @@ import {
   FileIcon,
   FitIcon,
   FolderIcon,
+  GroupIcon,
   HelpIcon,
   LogoIcon,
   MinusIcon,
   MoonIcon,
   PlusIcon,
+  PointIcon,
   RedoIcon,
   SaveIcon,
   SunIcon,
@@ -115,6 +117,23 @@ function TimelinePanel() {
   );
 }
 
+/** Everything that can be added to the diagram, in one menu: the toolbar has no room for a button each. */
+function AddMenu() {
+  return (
+    <>
+      <AddChannelItems />
+      <MenuItem
+        icon={<PointIcon />}
+        title="Transition point"
+        description="After the last one, ready for its exact time"
+        onSelect={addPointAtEnd}
+      />
+      <MenuDivider />
+      <MenuItem icon={<GroupIcon />} title="Group" description="A titled block of channels, e.g. one per state" onSelect={addGroupNow} />
+    </>
+  );
+}
+
 function ExportMenu() {
   const pdfPage = useStore((state) => state.pdfPage);
   return (
@@ -152,16 +171,28 @@ function ExportMenu() {
 function HelpPanel() {
   return (
     <div className="help">
-      <button
-        type="button"
-        className="text-button outlined help-example"
-        onClick={() => {
-          useStore.getState().closePanel();
-          loadExample();
-        }}
-      >
-        <LogoIcon /> Load the example diagram
-      </button>
+      <div className="help-examples">
+        <button
+          type="button"
+          className="text-button outlined"
+          onClick={() => {
+            useStore.getState().closePanel();
+            loadExample();
+          }}
+        >
+          <LogoIcon /> Load the example diagram
+        </button>
+        <button
+          type="button"
+          className="text-button outlined"
+          onClick={() => {
+            useStore.getState().closePanel();
+            loadExample(true);
+          }}
+        >
+          <GroupIcon /> Load the example with groups
+        </button>
+      </div>
       <h3>Channels</h3>
       <ul>
         <li>
@@ -255,12 +286,9 @@ export function Toolbar() {
 
       <span className="toolbar-divider" aria-hidden="true" />
       <div className="toolbar-group">
-        <MenuButton name="add-channel-toolbar" className="button" title="Add a channel" menu={() => <AddChannelItems />}>
-          <PlusIcon /> Channel
+        <MenuButton name="add" className="button" title="Add a channel, a transition point or a group" menu={() => <AddMenu />}>
+          <PlusIcon /> Add <ChevronDownIcon />
         </MenuButton>
-        <button type="button" className="button" title="Add a transition point after the last one" onClick={addPointAtEnd}>
-          <PlusIcon /> Point
-        </button>
       </div>
 
       <span className="toolbar-divider" aria-hidden="true" />

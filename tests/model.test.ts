@@ -318,3 +318,13 @@ describe('values', () => {
     expect(removeChannel(doc, 'nope')).toBe(doc);
   });
 });
+
+describe('edits that change nothing', () => {
+  it('do not make a new document, so they are no undo step', () => {
+    const doc = sampleDoc();
+    expect(updateChannel(doc, 'c1', { name: 'Start button' })).toBe(doc);
+    expect(updateChannel(doc, 'c3', { unit: 'mm', max: 100 })).toBe(doc);
+    expect(updateChannel(doc, 'c3', { max: 50 })).toBe(doc);
+    expect(updateChannel(doc, 'c3', { max: 150 })).not.toBe(doc);
+  });
+});

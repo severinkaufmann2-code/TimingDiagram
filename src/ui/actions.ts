@@ -1,13 +1,45 @@
 /** Commands that are reachable from more than one place (toolbar, keyboard, table). */
 
-import { addPoint, newDoc } from '../model/doc';
+import { addChannel, addPoint, newDoc } from '../model/doc';
+import { addGroup } from '../model/groups';
 import { niceStep, snapTo } from '../model/numbers';
-import { sampleDoc } from '../model/sample';
+import { sampleDoc, sampleGroupsDoc } from '../model/sample';
 import { ProjectFileError } from '../model/serialize';
+import type { ChannelKind } from '../model/types';
 import { PAD_LEFT, fitScale } from '../render/layout';
 import { effectiveScale, useStore } from '../state/store';
 import { HEADER_WIDTH } from './constants';
 import { PROJECT_ACCEPT, pickFile, readProject, saveProject } from './files';
+import { focusWhenShown } from './focus';
+
+/**
+ * Adds a channel and puts the cursor into its name. It goes to the bottom of
+ * the given group; without one, to the last group or the bottom of the diagram.
+ */
+export function addChannelOfKind(kind: ChannelKind, groupId?: string): void {
+  const { change, closePanel, setFolded } = useStore.getState();
+  let group: string | null = null;
+  change((doc) => {
+    const added = addChannel(doc, kind, groupId);
+    focusWhenShown(added.id);
+    group = added.doc.channels.find((channel) => channel.id === added.id)?.group ?? null;
+    return added.doc;
+  });
+  // a new channel in a group that is folded away would not be seen
+  if (group !== null) setFolded(group, false);
+  closePanel();
+}
+
+/** Adds a group and puts the cursor into its title. The first group takes the channels that are there. */
+export function addGroupNow(): void {
+  const { change, closePanel } = useStore.getState();
+  change((doc) => {
+    const added = addGroup(doc);
+    focusWhenShown(added.id);
+    return added.doc;
+  });
+  closePanel();
+}
 
 /** Adds a transition point one grid step after the last one and opens it for typing the exact time. */
 export function addPointAtEnd(): void {
@@ -51,9 +83,10 @@ export function newDiagram(): void {
   notify('New diagram.', 'info', true);
 }
 
-export function loadExample(): void {
+/** Loads one of the two example diagrams: the plain one, or the one with groups, phases and comments. */
+export function loadExample(withGroups = false): void {
   const { replaceDoc, notify } = useStore.getState();
-  replaceDoc(sampleDoc());
+  replaceDoc(withGroups ? sampleGroupsDoc() : sampleDoc());
   notify('Example loaded.', 'info', true);
 }
 

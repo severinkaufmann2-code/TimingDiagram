@@ -79,3 +79,38 @@ export function channelNames(page: Page): Promise<string[]> {
 export function markerLabels(page: Page): Promise<string[]> {
   return page.locator('.marker text').allTextContents();
 }
+
+/**
+ * Opens the app with the example that has groups, phases and comments: the
+ * groups g1 "Normal cycle" (c1…c5), g2 "Emergency stop" (c6…c8) and g3
+ * "Sensor fault" (c9…c12), with one more point, p7 at 2.0 s.
+ */
+export async function openGroupsExample(page: Page): Promise<void> {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Help' }).click();
+  await page.getByRole('button', { name: 'Load the example with groups' }).click();
+  await expect(page.locator('.group')).toHaveCount(3);
+}
+
+export function groupTitles(page: Page): Promise<string[]> {
+  return page.locator('.group .group-title').evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value));
+}
+
+/** The ids of the channels of every group, as the app would save them. */
+export async function channelsByGroup(page: Page): Promise<Record<string, string[]>> {
+  const doc = await savedProject(page);
+  const result: Record<string, string[]> = {};
+  for (const group of doc.groups) result[group.title] = doc.channels.filter((channel) => channel.group === group.id).map((channel) => channel.id);
+  return result;
+}
+
+/** The grip of a channel or of a group. */
+export function grip(page: Page, id: string): Locator {
+  return page.locator(`[data-grip="${id}"]`);
+}
+
+/** Folds the panel under the diagram away, which leaves the whole height of the window to the diagram. */
+export async function hidePanel(page: Page): Promise<void> {
+  const toggle = page.locator('.values-toggle');
+  if ((await toggle.getAttribute('aria-expanded')) === 'true') await toggle.click();
+}

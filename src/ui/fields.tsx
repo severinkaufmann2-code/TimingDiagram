@@ -50,7 +50,14 @@ export function TextField({
   onEnter,
   onKey,
 }: TextFieldProps) {
-  const [draft, setDraft] = useState<string | null>(null);
+  const [draft, setDraftState] = useState<string | null>(null);
+  // Enter applies the text and then leaves the field, which asks to apply it once more
+  // before the field has been drawn again. The reference always knows what is still unapplied.
+  const pending = useRef<string | null>(null);
+  const setDraft = (next: string | null) => {
+    pending.current = next;
+    setDraftState(next);
+  };
   const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -63,8 +70,9 @@ export function TextField({
   }, []);
 
   const commit = () => {
-    if (draft === null) return;
-    const next = draft.trim();
+    const typed = pending.current;
+    if (typed === null) return;
+    const next = typed.trim();
     setDraft(null);
     if (next === value || (required && next === '')) return;
     onCommit(next);

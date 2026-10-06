@@ -1,35 +1,25 @@
 /** The left column of the diagram: one header per channel, and the row that adds channels. */
 
-import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
-import { addChannel, moveChannel, removeChannel, setAllModes, setChannelKind, updateChannel } from '../model/doc';
+import { useEffect, useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
+import { moveChannelBy, removeChannel, setAllModes, setChannelKind, updateChannel } from '../model/doc';
 import { formatNumber } from '../model/numbers';
-import type { Channel, ChannelKind } from '../model/types';
-import { layoutRows, type Layout, type Row } from '../render/layout';
+import type { Channel } from '../model/types';
+import { layoutLanes, type Row } from '../render/layout';
 import { DARK, LIGHT } from '../render/theme';
 import { useStore } from '../state/store';
+import { addChannelOfKind, addGroupNow } from './actions';
 import { startDrag } from './drag';
 import { Segmented } from './editors';
 import { NumberField, TextField } from './fields';
+import { focusGiven, isFocusWanted } from './focus';
 import { GripIcon, PlusIcon, RampIcon, StepIcon, TrashIcon } from './icons';
 import { MenuButton, MenuItem } from './menus';
 import { Popover } from './Popover';
+import { channelDrop } from './reorder';
 
 const COLOR_NAMES = ['Blue', 'Orange', 'Green', 'Yellow', 'Pink', 'Dark green', 'Violet', 'Red'];
 
-/** Channel whose name field takes the keyboard focus as soon as it appears. */
-let renameOnMount: string | null = null;
-
-/** Adds a channel at the bottom and puts the cursor into its name. */
-export function addChannelOfKind(kind: ChannelKind): void {
-  const { change, closePanel } = useStore.getState();
-  change((doc) => {
-    const added = addChannel(doc, kind);
-    renameOnMount = added.id;
-    return added.doc;
-  });
-  closePanel();
-}
-
+/** The two kinds of channel, as entries of a menu. New channels go to the bottom: of the last group, if there are groups. */
 export function AddChannelItems() {
   return (
     <>
@@ -58,21 +48,22 @@ function describeKind(channel: Channel): string {
 
 interface ChannelHeaderProps {
   row: Row;
-  layout: Layout;
   color: string;
   selected: boolean;
+  /** Pins of the comments on the channel as a whole. */
+  pins?: ReactNode;
 }
 
-export function ChannelHeader({ row, layout, color, selected }: ChannelHeaderProps) {
+export function ChannelHeader({ row, color, selected, pins }: ChannelHeaderProps) {
   const { channel } = row;
   const id = channel.id;
   const settingsOpen = useStore((state) => state.panel?.type === 'channel' && state.panel.channelId === id);
   const kindButton = useRef<HTMLButtonElement>(null);
-  const rename = useRef(renameOnMount === id).current;
+  const rename = useRef(isFocusWanted(id)).current;
 
   useEffect(() => {
-    if (rename) renameOnMount = null;
-  }, [rename]);
+    if (rename) focusGiven(id);
+  }, [rename, id]);
 
   const toggleSettings = () => {
     const { openPanel, closePanel } = useStore.getState();
@@ -80,7 +71,10 @@ export function ChannelHeader({ row, layout, color, selected }: ChannelHeaderPro
     else openPanel({ type: 'channel', channelId: id });
   };
 
-  /** Drag the grip: the channel changes places with a neighbour once the pointer passes its middle. */
+  /**
+   * Drag the grip: the channel changes places with a neighbour once the
+   * pointer passes its middle, and goes over into another group at its edge.
+   */
   const beginReorder = (event: PointerEvent<HTMLButtonElement>) => {
     const column = event.currentTarget.closest('.stage-headers');
     if (!column) return;
@@ -88,18 +82,10 @@ export function ChannelHeader({ row, layout, color, selected }: ChannelHeaderPro
       cursor: 'grabbing',
       onStart: () => useStore.getState().beginGesture(),
       onMove: (_dx, _dy, move) => {
-        const { doc, change } = useStore.getState();
+        const { doc, folded, change } = useStore.getState();
         const y = move.clientY - column.getBoundingClientRect().top;
-        const rows = layoutRows(doc);
-        const from = rows.findIndex((candidate) => candidate.channel.id === id);
-        const over =
-          rows.find((candidate) => y >= candidate.top && y < candidate.top + candidate.height) ??
-          (y < 0 ? rows[0] : rows[rows.length - 1]);
-        if (from < 0 || !over || over.index === from) return;
-        const middle = over.top + over.height / 2;
-        if ((over.index > from && y > middle) || (over.index < from && y < middle)) {
-          change((d) => moveChannel(d, id, over.index));
-        }
+        const drop = channelDrop(layoutLanes(doc, new Set(folded)), id, y);
+        if (drop) change(drop);
       },
       onEnd: (dragged) => {
         if (dragged) useStore.getState().endGesture();
@@ -110,9 +96,15 @@ export function ChannelHeader({ row, layout, color, selected }: ChannelHeaderPro
   const onGripKey = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     event.preventDefault();
-    const target = row.index + (event.key === 'ArrowUp' ? -1 : 1);
-    if (target < 0 || target >= layout.rows.length) return;
-    useStore.getState().change((doc) => moveChannel(doc, id, target));
+    const { change, setFolded } = useStore.getState();
+    let group: string | null = null;
+    change((doc) => {
+      const next = moveChannelBy(doc, id, event.key === 'ArrowUp' ? -1 : 1);
+      group = next.channels.find((candidate) => candidate.id === id)?.group ?? null;
+      return next;
+    });
+    // gone over into a group that is folded away: show it, or the channel would vanish
+    if (group !== null) setFolded(group, false);
     // the row moves in the page, which drops the focus; pick it up again
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-grip="${id}"]`)?.focus());
   };
@@ -153,17 +145,20 @@ export function ChannelHeader({ row, layout, color, selected }: ChannelHeaderPro
           autoFocus={rename}
           onCommit={(name) => useStore.getState().change((doc) => updateChannel(doc, id, { name }))}
         />
-        <button
-          ref={kindButton}
-          type="button"
-          className="channel-kind"
-          aria-haspopup="dialog"
-          aria-expanded={settingsOpen}
-          title="Type, colour, unit and range"
-          onClick={toggleSettings}
-        >
-          {describeKind(channel)}
-        </button>
+        <span className="channel-sub">
+          <button
+            ref={kindButton}
+            type="button"
+            className="channel-kind"
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
+            title="Type, colour, unit and range"
+            onClick={toggleSettings}
+          >
+            {describeKind(channel)}
+          </button>
+          {pins}
+        </span>
       </div>
       <button
         type="button"
@@ -275,12 +270,16 @@ function ChannelSettings({ channel, trigger }: { channel: Channel; trigger: Reac
   );
 }
 
-export function AddChannelRow({ height }: { height: number }) {
+/** The row under the lanes: the place where the diagram grows by a channel or a group. */
+export function AddRow({ height }: { height: number }) {
   return (
     <div className="channel-add" style={{ height }}>
-      <MenuButton name="add-channel" className="add-channel-button" menu={() => <AddChannelItems />}>
-        <PlusIcon /> Add channel
+      <MenuButton name="add-channel" className="add-channel-button" ariaLabel="Add channel" title="Add a channel" menu={() => <AddChannelItems />}>
+        <PlusIcon /> Channel
       </MenuButton>
+      <button type="button" className="add-channel-button" aria-label="Add group" title="Add a group: a titled block of channels" onClick={addGroupNow}>
+        <PlusIcon /> Group
+      </button>
     </div>
   );
 }
