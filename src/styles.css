@@ -492,6 +492,13 @@ kbd {
   color: var(--muted);
 }
 
+/* the labels in the drawing are handles, not text to select */
+.ruler-svg,
+.lanes-svg {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .marker-lane {
   cursor: copy;
 }

@@ -27,9 +27,6 @@ npm install
 npm run build        # writes dist/index.html, the complete application
 ```
 
-If `npm install` stops with `Cannot read properties of null (reading 'edgesOut')`,
-the installed npm is too old (npm 9 has this bug). Run `npx npm@10 install` instead.
-
 ## Using it
 
 The editor starts with a small example. **New** in the toolbar gives you an

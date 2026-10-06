@@ -1,7 +1,7 @@
 {
   "name": "timing-diagram",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Timing diagram editor for the browser: stacked channels on one timeline, exact transition points, step and ramp values, export to Excel, PDF and HTML",
   "type": "module",
   "scripts": {
