@@ -59,10 +59,11 @@ export type ExportKind = 'xlsx' | 'pdf' | 'html' | 'png' | 'svg';
 
 /** Builds the chosen file and hands it to the browser as a download. The export code loads on first use. */
 export async function runExport(kind: ExportKind): Promise<void> {
-  const { doc, pdfPage, notify } = useStore.getState();
+  const { doc, pdfPage, zoom, notify } = useStore.getState();
   try {
     const { exportDiagram } = await import('../export');
-    const name = await exportDiagram(doc, kind, { pdfPage });
+    // a view zoomed by hand is exported at that zoom; the fitted view gets a standard width
+    const name = await exportDiagram(doc, kind, { pdfPage, scale: zoom === 'fit' ? undefined : zoom });
     notify(`Exported “${name}”.`);
   } catch (error) {
     console.error(error);

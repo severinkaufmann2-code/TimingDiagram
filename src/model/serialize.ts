@@ -145,10 +145,10 @@ export function serializeForHtml(doc: Doc): string {
 
 /** A file name made from the diagram title. */
 export function fileBaseName(doc: Doc): string {
+  // letters and digits of any language are fine in file names; everything else becomes a separator
   const name = doc.title
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^A-Za-z0-9 _.-]+/g, ' ')
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{N} _.-]+/gu, ' ')
     .trim()
     .replace(/\s+/g, '-')
     .replace(/^[.-]+|[.-]+$/g, '');

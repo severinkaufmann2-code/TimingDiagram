@@ -9,15 +9,17 @@ import { clamp, formatNumber } from '../model/numbers';
 import type { Doc } from '../model/types';
 import { channelVertices } from '../model/waveform';
 import { PAD_LEFT, crisp, rowY, type Layout, type Marker, type Row } from './layout';
-import { FONT_MONO, channelColor, type DiagramTheme } from './theme';
+import { channelColor, webFont, type DiagramTheme, type FontResolver } from './theme';
 
 interface Base {
   layout: Layout;
   theme: DiagramTheme;
+  /** How font faces are named. Only PDF export needs something other than the default. */
+  font?: FontResolver;
 }
 
 /** Upper part of the ruler: numbers and ticks, and the tinted lane the markers sit in. */
-export function RulerScale({ layout, theme }: Base) {
+export function RulerScale({ layout, theme, font = webFont }: Base) {
   const line = layout.scaleLine;
   const major = layout.majorTicks.map((tick) => `M${crisp(tick.x)} ${line - 6.5}V${line - 0.5}`).join('');
   const minor = layout.minorTicks.map((x) => `M${crisp(x)} ${line - 3.5}V${line - 0.5}`).join('');
@@ -32,7 +34,7 @@ export function RulerScale({ layout, theme }: Base) {
           x={crisp(tick.x)}
           y={line - 12.5}
           textAnchor="middle"
-          fontFamily={FONT_MONO}
+          {...font('mono400')}
           fontSize={10}
           fill={theme.textMuted}
         >
@@ -54,6 +56,7 @@ export function MarkerPill({
   marker,
   layout,
   theme,
+  font = webFont,
   selected = false,
   faint = false,
 }: Base & { marker: Marker; selected?: boolean; faint?: boolean }) {
@@ -82,9 +85,8 @@ export function MarkerPill({
         x={left + marker.width / 2}
         y={marker.top + 13.5}
         textAnchor="middle"
-        fontFamily={FONT_MONO}
+        {...font('mono500')}
         fontSize={11}
-        fontWeight={500}
         fill={selected ? theme.onSelected : theme.text}
       >
         {marker.label}
@@ -137,7 +139,7 @@ function round(n: number): number {
 }
 
 /** One channel: the wash under the line, the line, and the two value labels at the left. */
-export function Waveform({ doc, row, layout, theme }: Base & { doc: Doc; row: Row }) {
+export function Waveform({ doc, row, layout, theme, font = webFont }: Base & { doc: Doc; row: Row }) {
   const { channel } = row;
   const color = channelColor(theme, channel.color);
   const vertices = channelVertices(doc, channel).map((vertex) => ({
@@ -155,10 +157,10 @@ export function Waveform({ doc, row, layout, theme }: Base & { doc: Doc; row: Ro
     <g>
       <path d={area} fill={color} fillOpacity={theme.wash} stroke="none" />
       <path d={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      <text x={labelX} y={row.yMax + 3.5} textAnchor="end" fontFamily={FONT_MONO} fontSize={10} fill={theme.textMuted}>
+      <text x={labelX} y={row.yMax + 3.5} textAnchor="end" {...font('mono400')} fontSize={10} fill={theme.textMuted}>
         {formatNumber(channel.max)}
       </text>
-      <text x={labelX} y={row.yMin + 3.5} textAnchor="end" fontFamily={FONT_MONO} fontSize={10} fill={theme.textMuted}>
+      <text x={labelX} y={row.yMin + 3.5} textAnchor="end" {...font('mono400')} fontSize={10} fill={theme.textMuted}>
         {formatNumber(channel.min)}
       </text>
     </g>

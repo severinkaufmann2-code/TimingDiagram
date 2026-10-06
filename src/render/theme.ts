@@ -82,3 +82,23 @@ export function channelColor(theme: DiagramTheme, index: number): string {
 
 export const FONT_SANS = "'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif";
 export const FONT_MONO = "'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace";
+
+/** The font faces the drawing uses. Each one ships with the app. */
+export type FontFace = 'sans400' | 'sans600' | 'mono400' | 'mono500';
+
+export interface FontAttributes {
+  fontFamily: string;
+  fontWeight?: number;
+}
+
+/** Turns a font face into SVG attributes. Exports to PDF name their fonts differently. */
+export type FontResolver = (face: FontFace) => FontAttributes;
+
+const WEB_FONTS: Record<FontFace, FontAttributes> = {
+  sans400: { fontFamily: FONT_SANS, fontWeight: 400 },
+  sans600: { fontFamily: FONT_SANS, fontWeight: 600 },
+  mono400: { fontFamily: FONT_MONO, fontWeight: 400 },
+  mono500: { fontFamily: FONT_MONO, fontWeight: 500 },
+};
+
+export const webFont: FontResolver = (face) => WEB_FONTS[face];

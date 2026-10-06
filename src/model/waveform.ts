@@ -85,6 +85,30 @@ export function valueAt(doc: Doc, channel: Channel, time: number): number {
   return level;
 }
 
+/**
+ * The value a channel has just before a time: the same as {@link valueAt},
+ * except at the instant of a step, where this is the value before the jump.
+ */
+export function valueBefore(doc: Doc, channel: Channel, time: number): number {
+  let level = channel.initial;
+  let anchorTime = doc.time.start;
+
+  for (const point of doc.points) {
+    const cell = channel.cells[point.id];
+    if (!cell) continue;
+    if (time <= point.time) {
+      if (cell.mode === 'ramp' && time > anchorTime) {
+        const share = (time - anchorTime) / (point.time - anchorTime);
+        return level + (cell.value - level) * share;
+      }
+      return level;
+    }
+    level = cell.value;
+    anchorTime = point.time;
+  }
+  return level;
+}
+
 /** Smallest and largest value a channel takes. */
 export function valueExtent(channel: Channel): { min: number; max: number } {
   let min = channel.initial;
