@@ -1,0 +1,15 @@
+Can you create a timing diagram application which will work in linux and windows (does not mattre if it has to be recompiled first; e.g. C#, or in the webbrowser?).
+
+It should be respect following points:
+1) intuitive to use
+2) Should be able to easely add/remove channles
+3) each channel needs a editable name
+4) channels are stacked vertically
+5) horizontal there is one time line
+6) it should be possible to add "transition" points which should be easly movable and also able to be "editable" so that a exact time can be defined (because be moving it whith the mouse it wount be possible to define a exact time)
+7) at each point for each channel it should be possible to define a value
+8) at each points for each channel it should be possible to choose if the value between the privious point and the actual point s the value of the previous point or is increase cradualy unitl reasching the actual value (this is so that there can be representation of digital and analofg signals)
+9) shoudl be able to export it in a excel, pdf and html
+
+Please create a plan and a small mookup bevor you start the implementation
+Also create a repo on my github for this project
