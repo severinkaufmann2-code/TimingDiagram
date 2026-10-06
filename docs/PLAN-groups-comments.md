@@ -1,6 +1,6 @@
 # Groups, phases and comments – Plan
 
-Status: **proposal, nothing is built yet.** The decisions that need your OK are in section 9.
+Status: **approved on 2026-10-06 and built as version 1.1.0.** Section 11 lists where the result differs from this plan.
 Follows the [first plan](PLAN.md) (version 1.0, built).
 Mockup: [`mockup-groups-comments/index.html`](mockup-groups-comments/index.html) (open it in a browser). Its pictures are shown below.
 They are drawn with the editor's own drawing code and style sheet, so this is very close to how it will look.
@@ -217,9 +217,10 @@ Tests:
   stay unchanged and keep passing, which shows that a diagram without groups
   behaves as before.
 
-## 9. Decisions to confirm
+## 9. Decisions
 
-My choice is the first sentence of each item; say so if you want the other one.
+All six were confirmed as proposed on 2026-10-06. The first sentence of each
+item is what was built; the alternative is kept here for the record.
 
 1. **The small groups are called "phase".** Other words that would fit:
    *section*, *state*, *step*.
@@ -241,3 +242,39 @@ My choice is the first sentence of each item; say so if you want the other one.
 Text written directly into the drawing, arrows between transitions, groups
 inside groups, phases that span all groups, colours for phases, exporting only
 some of the groups, transition points that belong to one group only.
+
+## 11. What changed while building
+
+The mockup stays as it was drawn; these are the places where the finished
+editor differs from it or from the plan above.
+
+- **The list of comments has two columns,** the place and the text, in
+  pictures, in the PDF and on the web page. The mockup ran them together in one
+  line, which gets hard to read as soon as a text needs more than one line.
+- **A diagram that uses nothing new is still written as format version 1,**
+  so version 1.0 of the editor keeps opening it. Only a file with groups,
+  phases or comments says version 2.
+- **A comment can sit on the timeline without a transition point:** dropped in
+  the ruler away from every point, it stays at that time. That is also what
+  becomes of a comment whose transition point is deleted.
+- **A comment without text is no comment.** One that is placed and left empty
+  disappears without an undo step; emptying the text of an existing one
+  removes it, the way an emptied cell removes its value.
+- **The comment tool takes the whole diagram for itself.** While the pin is
+  picked up, nothing else reacts to a click, so a comment cannot move a point
+  or flip a value by accident. The free part of a group's bar is no place for
+  a comment: it belongs to the phases; a comment on the group goes on its title.
+- **In the Comments tab the number and the place find the pin,** not the whole
+  row, because the text in the row is edited in place.
+- **"Exact size" in the PDF carries the list of comments,** like a picture
+  file: that page is made for placing into other documents.
+- **Text is measured a little wide on purpose.** Chromium on Linux rounds the
+  width of every letter to whole pixels, which makes small text up to 5 % wider
+  than the font says. Titles are shortened and comments are broken into lines
+  with an allowance for that, so nothing runs out of its box in any browser.
+- **Two faults of version 1.0 came to light and are fixed.** A number typed
+  into the panel of a value or a transition point was thrown away when the
+  panel was closed by a click elsewhere; only Enter applied it. And renaming a
+  channel with Enter left a second undo step that changed nothing.
+- **The start-up example is unchanged;** the example with groups, phases and
+  comments is loaded from the help panel (**?**).

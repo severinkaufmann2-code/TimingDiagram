@@ -1,6 +1,7 @@
 /** Phases: titled stretches of time inside a group. Pure functions, like everything in the model. */
 
 import { dropOrphanComments } from './comments';
+import { findGroup } from './groups';
 import { newId } from './ids';
 import { anchorAt, anchorTime, coverMoments, sameAnchor } from './moments';
 import type { Anchor, Doc, Group, Phase } from './types';
@@ -20,17 +21,13 @@ export function phaseSpan(doc: Doc, phase: Phase): Span {
 }
 
 /** The moment a phase starts at, and the one it ends at. */
-function phaseEnds(doc: Doc, phase: Phase): { start: Anchor; end: Anchor } {
+export function phaseMoments(doc: Doc, phase: Phase): { start: Anchor; end: Anchor } {
   return anchorTime(doc, phase.from) <= anchorTime(doc, phase.to) ? { start: phase.from, end: phase.to } : { start: phase.to, end: phase.from };
 }
 
 /** The phases of a group from left to right. */
 export function sortedPhases(doc: Doc, group: Group): Phase[] {
   return [...group.phases].sort((a, b) => phaseSpan(doc, a).start - phaseSpan(doc, b).start);
-}
-
-function findGroup(doc: Doc, groupId: string): Group | undefined {
-  return doc.groups.find((group) => group.id === groupId);
 }
 
 export function findPhase(doc: Doc, groupId: string, phaseId: string): Phase | undefined {
@@ -52,7 +49,7 @@ function fit(doc: Doc, group: Group, origin: Anchor, target: Anchor, ignoreId?: 
     const span = phaseSpan(doc, other);
     if (span.start === span.end) continue;
     if (o > span.start && o < span.end) return null;
-    const ends = phaseEnds(doc, other);
+    const ends = phaseMoments(doc, other);
     if (t > o && span.start >= o && span.start < t) {
       t = span.start;
       far = ends.start;
@@ -175,11 +172,6 @@ export function stretchPhase(doc: Doc, groupId: string, phaseId: string, origin:
   return coverMoments(next);
 }
 
-/** The moment a phase starts at, and the one it ends at. */
-export function phaseMoments(doc: Doc, phase: Phase): { start: Anchor; end: Anchor } {
-  return phaseEnds(doc, phase);
-}
-
 /**
  * Moves the start or the end of a phase to another moment. The other end
  * stays; the moved one stops where a neighbouring phase begins.
@@ -187,7 +179,7 @@ export function phaseMoments(doc: Doc, phase: Phase): { start: Anchor; end: Anch
 export function setPhaseEdge(doc: Doc, groupId: string, phaseId: string, edge: 'start' | 'end', moment: Anchor): Doc {
   const phase = findPhase(doc, groupId, phaseId);
   if (!phase) return doc;
-  const ends = phaseEnds(doc, phase);
+  const ends = phaseMoments(doc, phase);
   return stretchPhase(doc, groupId, phaseId, edge === 'start' ? ends.end : ends.start, moment);
 }
 

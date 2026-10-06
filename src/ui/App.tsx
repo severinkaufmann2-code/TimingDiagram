@@ -176,6 +176,9 @@ export function App() {
           <span>Click the lane under the ruler to add a transition point</span>
           <span>Drag a point to move it, click it to type an exact time</span>
           <span>Drag a dot to change a value, click it to type one and choose Step or Ramp</span>
+          <span>
+            <kbd>C</kbd> pins a comment
+          </span>
         </footer>
       )}
       <Notice />

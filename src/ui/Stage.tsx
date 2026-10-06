@@ -108,7 +108,11 @@ export function Stage() {
   };
   const placingHandlers = placing
     ? {
-        onPointerMoveCapture: (event: PointerEvent) => setGhost(previewAt(event.clientX, event.clientY, event.altKey)),
+        onPointerMoveCapture: (event: PointerEvent) => {
+          // the lanes and bars do not show what they would do on a click: nothing, for now
+          event.stopPropagation();
+          setGhost(previewAt(event.clientX, event.clientY, event.altKey));
+        },
         onPointerLeave: () => setGhost(null),
         onPointerDownCapture: swallow,
         onMouseDownCapture: swallow,

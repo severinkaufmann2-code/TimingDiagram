@@ -213,7 +213,7 @@ function HelpPanel() {
       <h3>Channels</h3>
       <ul>
         <li>
-          <b>Add channel</b> under the lanes adds a digital (0 / 1) or an analog channel.
+          <b>+ Channel</b> under the lanes, or <b>Add</b> in the toolbar, adds a digital (0 / 1) or an analog channel.
         </li>
         <li>Click a name to rename it. Click the line under the name for type, colour, unit and range.</li>
         <li>Drag the grip on the left to reorder. The bin removes the channel.</li>
@@ -233,7 +233,38 @@ function HelpPanel() {
         <li>
           <b>Step</b> keeps the previous value and then jumps. <b>Ramp</b> changes gradually from the previous point.
         </li>
-        <li>The table at the bottom shows and edits the same numbers.</li>
+        <li>
+          The <b>Values</b> tab at the bottom shows and edits the same numbers.
+        </li>
+      </ul>
+      <h3>Groups</h3>
+      <ul>
+        <li>
+          <b>+ Group</b> under the lanes adds a titled block of channels, e.g. one per state of the machine. The first group takes the channels
+          that are there. All groups share the timeline and its transition points.
+        </li>
+        <li>
+          Click the title to rename it, drag its grip to reorder, fold it away with the arrow. <b>⋯</b> adds channels and phases, duplicates or
+          removes the group.
+        </li>
+        <li>Drag a channel by its grip into another group.</li>
+      </ul>
+      <h3>Phases</h3>
+      <ul>
+        <li>Click or drag in the bar of a group to add a phase: a titled stretch of time inside that group.</li>
+        <li>Click a phase for its title and exact times. Drag one of its ends to move it.</li>
+        <li>An end that sits on a transition point follows that point.</li>
+      </ul>
+      <h3>Comments</h3>
+      <ul>
+        <li>
+          <b>Comment</b> in the toolbar picks up a pin. Click where it belongs: a spot in a lane, a transition point, a phase, or the name of a
+          channel, a group or the diagram.
+        </li>
+        <li>Click a pin to read or change its text, drag it to another place.</li>
+        <li>
+          The <b>Comments</b> tab at the bottom lists them all. Exports show the pins and the texts.
+        </li>
       </ul>
       <h3>Keyboard</h3>
       <dl>
@@ -254,9 +285,13 @@ function HelpPanel() {
         </dt>
         <dd>Make the selected value a step / a ramp</dd>
         <dt>
+          <kbd>C</kbd>
+        </dt>
+        <dd>Pin a comment: to what has the focus, or with the next click</dd>
+        <dt>
           <kbd>Del</kbd>
         </dt>
-        <dd>Delete the selected point or value</dd>
+        <dd>Delete the selected point, value, phase or comment</dd>
         <dt>
           <kbd>Ctrl</kbd> + wheel
         </dt>
